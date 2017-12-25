@@ -1,1 +1,5 @@
 Library for oled-displays with SSD1306 or SH1106 display-controller connected with I2C at an AVR Atmel Atmega like Atmega328P.
+
+This library allows you to display only text at display, for graphics look at oled-display-gfx library
+The library need less then 1300 bytes flash-memory so you can use oled-displays e.g with Atmega48PA.
+Library is only tested with 128x64 Pixel display, lower resolution not tested but should work too.
