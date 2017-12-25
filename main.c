@@ -12,7 +12,7 @@
 
 int main(void)
 {
-    /* init I2C-Bus */
+    /* init I2C-Bus, for settings look at i2c.h */
     i2c_init();
     /* init display, after init turn on */
     lcd_init(LCD_DISP_ON);
