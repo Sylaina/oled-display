@@ -36,10 +36,6 @@
  *  lib for OLED-Display with ssd1306/sh1106-Controller
  *  first dev-version only for I2C-Connection
  *  at ATMega328P like Arduino Uno
- ****************************************************
- *  For other Atmegas/Attinys: GFX-Lib needs a
- *  minimum of 1029 byte SRAM!
- ****************************************************
  *
  */
 /* Standard ASCII 6x8 font */
