@@ -1,0 +1,1 @@
+Library for oled-displays with SSD1306 or SH1106 display-controller connected with I2C at an AVR Atmel Atmega like Atmega328P.
