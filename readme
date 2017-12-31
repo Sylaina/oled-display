@@ -1,5 +1,31 @@
 Library for oled-displays with SSD1306 or SH1106 display-controller connected with I2C at an AVR Atmel Atmega like Atmega328P.
 
-This library allows you to display only text at display, for graphics look at oled-display-gfx library
-The library need less then 1300 bytes flash-memory so you can use oled-displays e.g with Atmega48PA.
+This library allows you to display text or/and graphic at oled-display.
+The library need less then 2000 bytes flash-memory in textmode and less then 3200 bytes in graphicmode so you can use oled-displays e.g with Atmega48PA.
 Library is only tested with 128x64 Pixel display, lower resolution not tested but should work too.
+
+If you want to use your own I2C Library you have to fit i2c-function at lcd-library.
+Settings for I2C-bus have to set at i2c.h
+Settings for display have to set at lcd.h
+
+exampel:
+
+//****main.c****//
+#include "lcd.h"
+
+
+int main(void){
+  lcd_init(LCD_DISP_ON);    // init lcd and turn on
+  
+  lcd_puts("Hello World");  // put string from RAM to display (TEXTMODE) or buffer (GRAPHICMODE)
+  lcd_gotoxy(0,2);          // set cursor to first column at line 3
+  lcd_puts_p(PSTR("String from flash"));  // puts string form flash to display (TEXTMODE) or buffer (GRAPHICMODE)
+#if defined GRAPHICMODE
+  lcd_drawCircle(64,32,7,WHITE); // draw circle to buffer
+  lcd_display();                  // send buffer to display
+#endif
+  for(;;){
+    //main loop
+  }
+  return 0;
+}
