@@ -1,33 +1,19 @@
-/* Name: main.c
- * Author: <insert your name here>
- * Copyright: <insert your copyright message here>
- * License: <insert your license reference here>
- */
-
-
-#include <stdlib.h>
-#include <avr/io.h>
-#include "i2c.h"
+//****main.c****//
 #include "lcd.h"
 
-int main(void)
-{
-    /* init I2C-Bus, for settings look at i2c.h */
-    i2c_init();
-    /* init display, after init turn on */
-    lcd_init(LCD_DISP_ON);
-    /* clear screen */
-    lcd_clrscr();
-    /* put string from flash, cursor is at position x=0, y=0, left, top corner */
-    lcd_puts_p(PSTR("OLED Display "));
-    /* set cursor at begin from next line */
-    lcd_gotoxy(0,1);
-    /* put string from sram */
-    lcd_puts_p("with I2C ");
-    
-    for(;;){
-        /* insert your main loop code here */
-       
-    }
-    return 0;   /* never reached */
+
+int main(void){
+  lcd_init(LCD_DISP_ON);    // init lcd and turn on
+  
+  lcd_puts("Hello World");  // put string from RAM to display (TEXTMODE) or buffer (GRAPHICMODE)
+  lcd_gotoxy(0,2);          // set cursor to first column at line 3
+  lcd_puts_p(PSTR("String from flash"));  // puts string form flash to display (TEXTMODE) or buffer (GRAPHICMODE)
+#if defined GRAPHICMODE
+  lcd_drawCircle(64,32,7,WHITE); // draw circle to buffer
+  lcd_display();                  // send buffer to display
+#endif
+  for(;;){
+    //main loop
+  }
+  return 0;
 }
