@@ -65,7 +65,7 @@
 
 /* TODO: define displaycontroller */
 #define SH1106                              // or SSD1306, check datasheet of your display
-
+/* TODO: define displaymode */
 #define GRAPHICMODE                         // TEXTMODE for only text to display,
                                             // GRAPHICMODE for text and graphic
 
