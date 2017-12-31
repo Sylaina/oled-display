@@ -56,7 +56,6 @@
 #endif
 
 #include <inttypes.h>
-#include <avr/io.h>
 #include <avr/pgmspace.h>
 #include "i2c.h"                            // library for I2C-communication
                                             // if you want to use other lib for I2C
