@@ -69,7 +69,7 @@
 #define GRAPHICMODE                         // TEXTMODE for only text to display,
                                             // GRAPHICMODE for text and graphic
 
-#define LCD_I2C_ADDR    0x7A
+#define LCD_I2C_ADR    0x7A
 
 #define LCD_DISP_OFF	0xAE
 #define LCD_DISP_ON		0xAF
