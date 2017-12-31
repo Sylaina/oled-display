@@ -62,4 +62,6 @@ uint8_t i2c_readNAck(void){
     while ((TWCR & (1<<TWINT)) == 0);
     return TWDR;
 }
+#else
+#error "Micorcontroller not supported now!"
 #endif
