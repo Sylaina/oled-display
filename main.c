@@ -9,8 +9,8 @@ int main(void){
   lcd_gotoxy(0,2);          // set cursor to first column at line 3
   lcd_puts_p(PSTR("String from flash"));  // puts string form flash to display (TEXTMODE) or buffer (GRAPHICMODE)
 #if defined GRAPHICMODE
-  lcd_drawCircle(64,32,7,WHITE); // draw circle to buffer
-  lcd_display();                  // send buffer to display
+  lcd_drawCircle(64,32,7,WHITE); // draw circle to buffer white lines
+  lcd_display();                 // send buffer to display
 #endif
   for(;;){
     //main loop
