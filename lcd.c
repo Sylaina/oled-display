@@ -185,7 +185,7 @@ const uint8_t init_sequence [] PROGMEM = {	// Initialization Sequence
     
 };
 void lcd_command(uint8_t cmd[], uint8_t size) {
-    i2c_start(LCD_I2C_ADDR);
+    i2c_start(LCD_I2C_ADR);
     i2c_byte(0x00);	// 0x00 for command, 0x40 for data
     for (uint8_t i=0; i<size; i++) {
         i2c_byte(cmd[i]);
@@ -193,7 +193,7 @@ void lcd_command(uint8_t cmd[], uint8_t size) {
     i2c_stop();
 }
 void lcd_data(uint8_t data[], uint16_t size) {
-    i2c_start(LCD_I2C_ADDR);
+    i2c_start(LCD_I2C_ADR);
     i2c_byte(0x40);	// 0x00 for command, 0x40 for data
     for (uint16_t i = 0; i<size; i++) {
         i2c_byte(data[i]);
@@ -214,7 +214,7 @@ void lcd_home(void){
     lcd_gotoxy(0, 0);
 }
 void lcd_invert(uint8_t invert){
-    i2c_start(LCD_I2C_ADDR);
+    i2c_start(LCD_I2C_ADR);
     uint8_t commandSequence[1];
     if (invert == YES) {
         commandSequence[0] = 0xA7;
@@ -271,7 +271,7 @@ void lcd_putc(char c){
         c != 'Ö' &&
         c != 'Ä' ) ) return;
     
-    i2c_start(LCD_I2C_ADDR);
+    i2c_start(LCD_I2C_ADR);
     i2c_byte(0x40);	// 0x00 for command, 0x40 for data
     switch (c) {
         case 'ü':
