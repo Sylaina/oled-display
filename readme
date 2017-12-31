@@ -4,7 +4,7 @@ This library allows you to display text or/and graphic at oled-display.
 The library need less then 2000 bytes flash-memory in textmode and less then 3200 bytes in graphicmode so you can use oled-displays e.g with Atmega48PA.
 Library is only tested with 128x64 Pixel display, lower resolution not tested but should work too.
 
-If you want to use your own I2C Library you have to fit i2c-function at lcd-library.
+If you want to use your own I2C library you have to fit i2c-function at lcd-library.
 Settings for I2C-bus have to set at i2c.h
 Settings for display have to set at lcd.h
 
