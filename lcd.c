@@ -37,13 +37,20 @@
  *  first dev-version only for I2C-Connection
  *  at ATMega328P like Arduino Uno
  *
+ *  at GRAPHICMODE lib needs SRAM for display
+ *  DISPLAY-WIDTH * DISPLAY-HEIGHT + 2 bytes
  */
-/* Standard ASCII 6x8 font */
 
 #include "lcd.h"
-#include <avr/interrupt.h>
 #include <string.h>
 
+#if defined GRAPHICMODE
+#include <stdlib.h>
+static uint8_t displayBuffer[DISPLAYSIZE];
+uint16_t actualIndex = 0;
+#endif
+
+/* Standard ASCII 6x8 font */
 static const uint8_t ssd1306oled_font6x8 [] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // sp
     0x00, 0x00, 0x00, 0x2f, 0x00, 0x00, // !
@@ -177,7 +184,22 @@ const uint8_t init_sequence [] PROGMEM = {	// Initialization Sequence
     
     
 };
-
+void lcd_command(uint8_t cmd[], uint8_t size) {
+    i2c_start(LCD_I2C_ADDR);
+    i2c_byte(0x00);	// 0x00 for command, 0x40 for data
+    for (uint8_t i=0; i<size; i++) {
+        i2c_byte(cmd[i]);
+    }
+    i2c_stop();
+}
+void lcd_data(uint8_t data[], uint16_t size) {
+    i2c_start(LCD_I2C_ADDR);
+    i2c_byte(0x40);	// 0x00 for command, 0x40 for data
+    for (uint16_t i = 0; i<size; i++) {
+        i2c_byte(data[i]);
+    }
+    i2c_stop();
+}
 void lcd_init(uint8_t dispAttr){
     i2c_init();
     uint8_t commandSequence[sizeof(init_sequence)+1];
@@ -191,24 +213,43 @@ void lcd_init(uint8_t dispAttr){
 void lcd_home(void){
     lcd_gotoxy(0, 0);
 }
-
-void lcd_command(uint8_t cmd[], uint8_t size) {
+void lcd_invert(uint8_t invert){
     i2c_start(LCD_I2C_ADDR);
-    i2c_byte(0x00);	// 0x00 for command, 0x40 for data
-    for (uint8_t i=0; i<size; i++) {
-        i2c_byte(cmd[i]);
+    uint8_t commandSequence[1];
+    if (invert == YES) {
+        commandSequence[0] = 0xA7;
+    } else {
+        commandSequence[0] = 0xA7;
     }
-    i2c_stop();
+    lcd_command(commandSequence, 1);
 }
-void lcd_data(uint8_t data[], uint16_t size) {
-    i2c_start(LCD_I2C_ADDR);
-    i2c_byte(0x40);	// 0x00 for command, 0x40 for data
-    for (uint8_t i = 0; i<size; i++) {
-        i2c_byte(data[i]);
+void lcd_set_contrast(uint8_t contrast){
+    uint8_t commandSequence[2] = {0x81, contrast};
+    lcd_command(commandSequence, sizeof(commandSequence));
+}
+void lcd_puts(const char* s){
+    while (*s) {
+        lcd_putc(*s++);
     }
-    i2c_stop();
 }
-void lcd_gotoxy(uint8_t x, uint8_t y){
+void lcd_puts_p(const char* progmem_s){
+    register uint8_t c;
+    while ((c = pgm_read_byte(progmem_s++))) {
+        lcd_putc(c);
+    }
+}
+#if defined TEXTMODE
+void lcd_clrscr(void){
+    uint8_t clearLine[DISPLAY_WIDTH];
+    memset(clearLine, 0x00, DISPLAY_WIDTH);
+    for (uint8_t j = 0; j < DISPLAY_HEIGHT/8; j++){
+        lcd_gotoxy(0,j);
+        lcd_data(clearLine, sizeof(clearLine));
+        
+    }
+    lcd_home();
+}
+void lcd_gotoxy(uint8_t x, uint8_t y) {
     if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
     x = x * 6;					// one char: 6 pixel width
 #if defined SSD1306
@@ -218,17 +259,6 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
 #endif
     lcd_command(commandSequence, sizeof(commandSequence));
 }
-void lcd_clrscr(void){
-    uint8_t clearLine[DISPLAY_WIDTH];
-    memset(clearLine, 0x00, DISPLAY_WIDTH);
-    for (uint8_t j = 0; j <= DISPLAY_HEIGHT/8-1; j++){
-        lcd_gotoxy(0,j);
-        lcd_data(clearLine, sizeof(clearLine));
-        
-    }
-    lcd_home();
-}
-
 void lcd_putc(char c){
     if((c > 127 ||
         c < 32) &&
@@ -313,28 +343,216 @@ void lcd_putc(char c){
     }
     i2c_stop();
 }
-void lcd_puts(const char* s){
-    while (*s) {
-        lcd_putc(*s++);
+#elif defined GRAPHICMODE
+void lcd_clrscr(void){
+    memset(displayBuffer, 0x00, sizeof(displayBuffer));
+#if defined SSD1306
+    lcd_data(displayBuffer, sizeof(displayBuffer));
+#elif defined SH1106
+    for (uint8_t i=0; i <= DISPLAY_HEIGHT/8; i++) {
+        uint8_t actualLine[DISPLAY_WIDTH];
+        for (uint8_t j=0; j< DISPLAY_WIDTH; j++) {
+            actualLine[j]=displayBuffer[i*DISPLAY_WIDTH+j];
+        }
+        lcd_data(actualLine, sizeof(actualLine));
+        lcd_gotoxy(0, i);
     }
+#endif
+    lcd_home();
 }
-void lcd_puts_p(const char* progmem_s){
-    register uint8_t c;
-    while ((c = pgm_read_byte(progmem_s++))) {
-        lcd_putc(c);
-    }
-}
-void lcd_invert(uint8_t invert){
-    i2c_start(LCD_I2C_ADDR);
-    uint8_t commandSequence[1];
-    if (invert == YES) {
-        commandSequence[0] = 0xA7;
-    } else {
-        commandSequence[0] = 0xA7;
-    }
-    lcd_command(commandSequence, 1);
-}
-void lcd_set_contrast(uint8_t contrast){
-    uint8_t commandSequence[2] = {0x81, contrast};
+void lcd_gotoxy(uint8_t x, uint8_t y){
+    if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    x = x * 6;					// one char: 6 pixel width
+    actualIndex = (x)+(y*DISPLAY_WIDTH);
+#if defined SSD1306
+    uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
+#elif defined SH1106
+    uint8_t commandSequence[] = {0xb0+y, 0x21, 0x00+((2+x) & (0x0f)), 0x10+( ((2+x) & (0xf0)) >> 4 ), 0x7f};
+#endif
     lcd_command(commandSequence, sizeof(commandSequence));
 }
+void lcd_putc(char c){
+    if((actualIndex+1)%127 != 0){
+        if((c > 127 ||
+            c < 32) &&
+           (c != 'ü' &&
+            c != 'ö' &&
+            c != '°' &&
+            c != 'ä' &&
+            c != 'ß' &&
+            c != 'Ü' &&
+            c != 'Ö' &&
+            c != 'Ä' ) ) return;
+        switch (c) {
+            case 'ü':
+                c = 95; // ü - 188
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            case 'ö':
+                c = 99; // ö
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            case '°':
+                c = 101; // °
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            case 'ä':
+                c = 97; // ä
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            case 'ß':
+                c = 102; // ß
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            case 'Ü':
+                c = 96; // Ü
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            case 'Ö':
+                c = 100; // Ö
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            case 'Ä':
+                c = 98; // Ä
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
+                }
+                break;
+            default:
+                c -= 32;
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);
+                }
+                break;
+        }
+    }
+    actualIndex += 6;
+}
+
+void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color){
+    if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return; // out of Display
+    if( color == WHITE){
+        displayBuffer[(uint8_t)(y / (DISPLAY_HEIGHT/8)) * DISPLAY_WIDTH +x] |= (1 << (y % (DISPLAY_HEIGHT/8)));
+    } else {
+        displayBuffer[(uint8_t)(y / (DISPLAY_HEIGHT/8)) * DISPLAY_WIDTH +x] &= ~(1 << (y % (DISPLAY_HEIGHT/8)));
+    }
+}
+void lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color){
+    if( x1 > DISPLAY_WIDTH-1 ||
+       x2 > DISPLAY_WIDTH-1 ||
+       y1 > DISPLAY_HEIGHT-1 ||
+       y2 > DISPLAY_HEIGHT-1) return;
+    int dx =  abs(x2-x1), sx = x1<x2 ? 1 : -1;
+    int dy = -abs(y2-y1), sy = y1<y2 ? 1 : -1;
+    int err = dx+dy, e2; /* error value e_xy */
+    
+    while(1){
+        lcd_drawPixel(x1, y1, color);
+        if (x1==x2 && y1==y2) break;
+        e2 = 2*err;
+        if (e2 > dy) { err += dy; x1 += sx; } /* e_xy+e_x > 0 */
+        if (e2 < dx) { err += dx; y1 += sy; } /* e_xy+e_y < 0 */
+    }
+}
+void lcd_drawRect(uint8_t px1, uint8_t py1, uint8_t px2, uint8_t py2, uint8_t color){
+    if( px1 > DISPLAY_WIDTH-1 ||
+       px2 > DISPLAY_WIDTH-1 ||
+       py1 > DISPLAY_HEIGHT-1 ||
+       py2 > DISPLAY_HEIGHT-1) return;
+    lcd_drawLine(px1, py1, px2, py1, color);
+    lcd_drawLine(px2, py1, px2, py2, color);
+    lcd_drawLine(px2, py2, px1, py2, color);
+    lcd_drawLine(px1, py2, px1, py1, color);
+}
+void lcd_fillRect(uint8_t px1, uint8_t py1, uint8_t px2, uint8_t py2, uint8_t color){
+    if( px1 > px2){
+        uint8_t temp = px1;
+        px1 = px2;
+        px2 = temp;
+        temp = py1;
+        py1 = py2;
+        py2 = temp;
+    }
+    for (uint8_t i=0; i<=(py2-py1); i++){
+        lcd_drawLine(px1, py1+i, px2, py1+i, color);
+    }
+}
+void lcd_drawCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color){
+    if( ((center_x + radius) > DISPLAY_WIDTH-1) ||
+       ((center_y + radius) > DISPLAY_HEIGHT-1) ||
+       center_x < radius ||
+       center_y < radius) return;
+    int16_t f = 1 - radius;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * radius;
+    int16_t x = 0;
+    int16_t y = radius;
+    
+    lcd_drawPixel(center_x  , center_y+radius, color);
+    lcd_drawPixel(center_x  , center_y-radius, color);
+    lcd_drawPixel(center_x+radius, center_y  , color);
+    lcd_drawPixel(center_x-radius, center_y  , color);
+    
+    while (x<y) {
+        if (f >= 0) {
+            y--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        x++;
+        ddF_x += 2;
+        f += ddF_x;
+        
+        lcd_drawPixel(center_x + x, center_y + y, color);
+        lcd_drawPixel(center_x - x, center_y + y, color);
+        lcd_drawPixel(center_x + x, center_y - y, color);
+        lcd_drawPixel(center_x - x, center_y - y, color);
+        lcd_drawPixel(center_x + y, center_y + x, color);
+        lcd_drawPixel(center_x - y, center_y + x, color);
+        lcd_drawPixel(center_x + y, center_y - x, color);
+        lcd_drawPixel(center_x - y, center_y - x, color);
+    }
+}
+void lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color) {
+    for(uint8_t i=0; i<= radius;i++){
+        lcd_drawCircle(center_x, center_y, i, color);
+    }
+}
+void lcd_display() {
+#if defined SSD1306
+    lcd_data(displayBuffer, sizeof(displayBuffer));
+#elif defined SH1106
+    for (uint8_t i=0; i < DISPLAY_HEIGHT/8; i++) {
+        lcd_gotoxy(0, i);
+        uint8_t actualLine[DISPLAY_WIDTH];
+        for (uint8_t j=0; j < DISPLAY_WIDTH; j++) {
+            actualLine[j]=displayBuffer[i*DISPLAY_WIDTH+j];
+        }
+        lcd_data(actualLine, sizeof(actualLine));
+    }
+#endif
+}
+#endif
