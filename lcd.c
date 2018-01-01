@@ -44,6 +44,7 @@
 #include "lcd.h"
 #include <string.h>
 
+uint8_t cursorPosition=0;
 #if defined GRAPHICMODE
 #include <stdlib.h>
 static uint8_t displayBuffer[DISPLAYSIZE];
@@ -251,6 +252,7 @@ void lcd_clrscr(void){
 }
 void lcd_gotoxy(uint8_t x, uint8_t y) {
     if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    cursorPosition=x;
     x = x * 6;					// one char: 6 pixel width
 #if defined SSD1306
     uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
@@ -261,6 +263,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y) {
 }
 void lcd_putc(char c){
     if((c > 127 ||
+        cursorPosition > 20 ||
         c < 32) &&
        (c != 'ü' &&
         c != 'ö' &&
@@ -270,7 +273,7 @@ void lcd_putc(char c){
         c != 'Ü' &&
         c != 'Ö' &&
         c != 'Ä' ) ) return;
-    
+    cursorPosition++;
     i2c_start(LCD_I2C_ADR);
     i2c_byte(0x40);	// 0x00 for command, 0x40 for data
     switch (c) {
@@ -362,6 +365,7 @@ void lcd_clrscr(void){
 }
 void lcd_gotoxy(uint8_t x, uint8_t y){
     if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    cursorPosition=x;
     x = x * 6;					// one char: 6 pixel width
     actualIndex = (x)+(y*DISPLAY_WIDTH);
 #if defined SSD1306
@@ -374,6 +378,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
 void lcd_putc(char c){
     if((actualIndex+1)%127 != 0){
         if((c > 127 ||
+            cursorPosition > 20 ||
             c < 32) &&
            (c != 'ü' &&
             c != 'ö' &&
@@ -383,6 +388,7 @@ void lcd_putc(char c){
             c != 'Ü' &&
             c != 'Ö' &&
             c != 'Ä' ) ) return;
+        cursorPosition++;
         switch (c) {
             case 'ü':
                 c = 95; // ü - 188
