@@ -549,7 +549,7 @@ void lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t 
 }
 void lcd_display() {
 #if defined SSD1306
-    lcd_gotoxy(0,0)
+    lcd_gotoxy(0,0);
     lcd_data(displayBuffer, sizeof(displayBuffer));
 #elif defined SH1106
     for (uint8_t i=0; i < DISPLAY_HEIGHT/8; i++) {
