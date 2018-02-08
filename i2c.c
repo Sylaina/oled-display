@@ -14,6 +14,9 @@
 #elif SET_TWBR < 0 || SET_TWBR > 255
 #error "TWBR out of range, change PSC_I2C or F_I2C !"
 #endif
+
+uint8_t I2C_ErrorCode;
+
 void i2c_init(void){
     // set clock
     switch (PSC_I2C) {
@@ -37,11 +40,27 @@ void i2c_init(void){
 void i2c_start(uint8_t i2c_addr){
     // i2c start
     TWCR = (1 << TWINT)|(1 << TWSTA)|(1 << TWEN);
-    while((TWCR & (1 << TWINT)) == 0);
+	uint8_t timeout = F_CPU/F_I2C*1.25;
+    while((TWCR & (1 << TWINT)) == 0 &&
+		timeout !=0){
+		timeout--;
+		if(timeout == 0){
+			I2C_ErrorCode |= (1 << I2C_START);
+			return 0;
+		}
+	};
     // send adress
     TWDR = i2c_addr;
     TWCR = (1 << TWINT)|( 1 << TWEN);
-    while((TWCR & (1 << TWINT)) == 0);
+    timeout = F_CPU/F_I2C*1.25;
+    while((TWCR & (1 << TWINT)) == 0 &&
+		  timeout !=0){
+		timeout--;
+		if(timeout == 0){
+			I2C_ErrorCode |= (1 << I2C_SENDADRESS);
+			return 0;
+		}
+	};
 }
 void i2c_stop(void){
     // i2c stop
@@ -50,16 +69,39 @@ void i2c_stop(void){
 void i2c_byte(uint8_t byte){
     TWDR = byte;
     TWCR = (1 << TWINT)|( 1 << TWEN);
-    while((TWCR & (1 << TWINT)) == 0);
+    uint8_t timeout = F_CPU/F_I2C*1.25;
+    while((TWCR & (1 << TWINT)) == 0 &&
+		  timeout !=0){
+		timeout--;
+		if(timeout == 0){
+			I2C_ErrorCode |= (1 << I2C_BYTE);
+			return 0;
+		}
+	};
 }
 uint8_t i2c_readAck(void){
     TWCR = (1<<TWINT)|(1<<TWEN)|(1<<TWEA);
-    while ((TWCR & (1<<TWINT)) == 0);
+    uint8_t timeout = F_CPU/F_I2C*1.25;
+    while((TWCR & (1 << TWINT)) == 0 &&
+		  timeout !=0){
+		timeout--;
+		if(timeout == 0){
+			I2C_ErrorCode |= (1 << I2C_READACK);
+			return 0;
+		}
+	};
     return TWDR;
 }
 uint8_t i2c_readNAck(void){
     TWCR = (1<<TWINT)|(1<<TWEN);
-    while ((TWCR & (1<<TWINT)) == 0);
+    uint8_t timeout = F_CPU/F_I2C*1.25;
+    while((TWCR & (1 << TWINT)) == 0 &&
+		  timeout !=0){
+		timeout--;
+		if(timeout == 0){
+			I2C_ErrorCode |= (1 << I2C_READNACK);
+		}
+	};
     return TWDR;
 }
 #else
