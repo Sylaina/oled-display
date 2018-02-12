@@ -40,7 +40,7 @@ void i2c_init(void){
 void i2c_start(uint8_t i2c_addr){
     // i2c start
     TWCR = (1 << TWINT)|(1 << TWSTA)|(1 << TWEN);
-	uint8_t timeout = F_CPU/F_I2C*1.25;
+	uint16_t timeout = F_CPU/F_I2C*2.0;
     while((TWCR & (1 << TWINT)) == 0 &&
 		timeout !=0){
 		timeout--;
@@ -52,7 +52,7 @@ void i2c_start(uint8_t i2c_addr){
     // send adress
     TWDR = i2c_addr;
     TWCR = (1 << TWINT)|( 1 << TWEN);
-    timeout = F_CPU/F_I2C*1.25;
+    timeout = F_CPU/F_I2C*2.0;
     while((TWCR & (1 << TWINT)) == 0 &&
 		  timeout !=0){
 		timeout--;
@@ -69,7 +69,7 @@ void i2c_stop(void){
 void i2c_byte(uint8_t byte){
     TWDR = byte;
     TWCR = (1 << TWINT)|( 1 << TWEN);
-    uint8_t timeout = F_CPU/F_I2C*1.25;
+    uint16_t timeout = F_CPU/F_I2C*2.0;
     while((TWCR & (1 << TWINT)) == 0 &&
 		  timeout !=0){
 		timeout--;
@@ -81,7 +81,7 @@ void i2c_byte(uint8_t byte){
 }
 uint8_t i2c_readAck(void){
     TWCR = (1<<TWINT)|(1<<TWEN)|(1<<TWEA);
-    uint8_t timeout = F_CPU/F_I2C*1.25;
+    uint16_t timeout = F_CPU/F_I2C*2.0;
     while((TWCR & (1 << TWINT)) == 0 &&
 		  timeout !=0){
 		timeout--;
@@ -94,7 +94,7 @@ uint8_t i2c_readAck(void){
 }
 uint8_t i2c_readNAck(void){
     TWCR = (1<<TWINT)|(1<<TWEN);
-    uint8_t timeout = F_CPU/F_I2C*1.25;
+    uint16_t timeout = F_CPU/F_I2C*2.0;
     while((TWCR & (1 << TWINT)) == 0 &&
 		  timeout !=0){
 		timeout--;
