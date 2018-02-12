@@ -46,7 +46,7 @@ void i2c_start(uint8_t i2c_addr){
 		timeout--;
 		if(timeout == 0){
 			I2C_ErrorCode |= (1 << I2C_START);
-			return 0;
+			return;
 		}
 	};
     // send adress
@@ -58,7 +58,7 @@ void i2c_start(uint8_t i2c_addr){
 		timeout--;
 		if(timeout == 0){
 			I2C_ErrorCode |= (1 << I2C_SENDADRESS);
-			return 0;
+			return;
 		}
 	};
 }
@@ -75,7 +75,7 @@ void i2c_byte(uint8_t byte){
 		timeout--;
 		if(timeout == 0){
 			I2C_ErrorCode |= (1 << I2C_BYTE);
-			return 0;
+			return;
 		}
 	};
 }
@@ -100,6 +100,7 @@ uint8_t i2c_readNAck(void){
 		timeout--;
 		if(timeout == 0){
 			I2C_ErrorCode |= (1 << I2C_READNACK);
+			return 0;
 		}
 	};
     return TWDR;
