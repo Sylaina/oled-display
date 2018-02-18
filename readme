@@ -8,7 +8,9 @@ If you want to use your own I2C library you have to fit i2c-function at lcd-libr
 Settings for I2C-bus have to set at i2c.h
 Settings for display have to set at lcd.h
 
-exampel:
+If you want to use characters like e.g. ä set your compiler input-charset to utf-8 and your compiler exec-charset to iso-8859-15 (look at makefile line 115).
+
+example:
 
 //****main.c****//
 #include "lcd.h"
@@ -29,3 +31,13 @@ int main(void){
   }
   return 0;
 }
+
+For Arduino-Users:
+
+Remember that this library is a c-library. Type
+
+extern "C"{
+  #include "lcd.h"
+}
+
+for include.
