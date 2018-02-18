@@ -547,6 +547,16 @@ void lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t 
         lcd_drawCircle(center_x, center_y, i, color);
     }
 }
+void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t *picture, uint8_t width, uint8_t height, uint8_t color){
+    uint8_t i,j, byteWidth = (width+7)/8;
+    for (j = 0; j < height; j++) {
+        for(i=0; i < width;i++){
+            if(pgm_read_byte(picture + j * byteWidth + i / 8) & (128 >> (i & 7))){
+                lcd_drawPixel(x+i, y+j, color);
+            }
+        }
+    }
+}
 void lcd_display() {
 #if defined SSD1306
     lcd_gotoxy(0,0);
