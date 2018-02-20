@@ -67,7 +67,9 @@
 /* TODO: define displaymode */
 #define GRAPHICMODE                         // TEXTMODE for only text to display,
                                             // GRAPHICMODE for text and graphic
-
+/* TODO: define I2C-adress for display */
+// using 8-bit-mode (slave-mode) for i2c-library
+// if you use your own library for twi check I2C-adress-handle
 #define LCD_I2C_ADR    0x7A
 
 #define LCD_DISP_OFF	0xAE
