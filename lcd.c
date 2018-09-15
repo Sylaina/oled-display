@@ -15,22 +15,22 @@
  *
  * Diese Datei ist Teil von lcd library for ssd1306/sh1106 oled-display.
  *
- * lcd library for ssd1306/sh1106 oled-display ist Freie Software: Sie können es unter den Bedingungen
+ * lcd library for ssd1306/sh1106 oled-display ist Freie Software: Sie kÃ¶nnen es unter den Bedingungen
  * der GNU General Public License, wie von der Free Software Foundation,
- * Version 3 der Lizenz oder jeder späteren
- * veröffentlichten Version, weiterverbreiten und/oder modifizieren.
+ * Version 3 der Lizenz oder jeder spÃ¤teren
+ * verÃ¶ffentlichten Version, weiterverbreiten und/oder modifizieren.
  *
- * lcd library for ssd1306/sh1106 oled-display wird in der Hoffnung, dass es nützlich sein wird, aber
- * OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
- * Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
- * Siehe die GNU General Public License für weitere Details.
+ * lcd library for ssd1306/sh1106 oled-display wird in der Hoffnung, dass es nÃ¼tzlich sein wird, aber
+ * OHNE JEDE GEWÃ„HRLEISTUNG, bereitgestellt; sogar ohne die implizite
+ * GewÃ¤hrleistung der MARKTFÃ„HIGKEIT oder EIGNUNG FÃœR EINEN BESTIMMTEN ZWECK.
+ * Siehe die GNU General Public License fÃ¼r weitere Details.
  *
  * Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
  * Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
  *
  *  lcd.h
  *
- *  Created by Michael Köhler on 22.12.16.
+ *  Created by Michael Koehler on 22.12.16.
  *  Copyright 2016 Skie-Systems. All rights reserved.
  *
  *  lib for OLED-Display with ssd1306/sh1106-Controller
@@ -42,151 +42,53 @@
  */
 
 #include "lcd.h"
+#include "font.h"
 #include <string.h>
 
-uint8_t cursorPosition=0;
+/* TODO: setUp Font*/
+const char *font = ssd1306oled_font6x8;
+
+static struct {
+	uint8_t x;
+	uint8_t y;
+} cursorPosition;
 #if defined GRAPHICMODE
 #include <stdlib.h>
 static uint8_t displayBuffer[DISPLAYSIZE];
 uint16_t actualIndex = 0;
 #endif
 
-/* Standard ASCII 6x8 font */
-static const uint8_t ssd1306oled_font6x8 [] PROGMEM = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // sp
-    0x00, 0x00, 0x00, 0x2f, 0x00, 0x00, // !
-    0x00, 0x00, 0x07, 0x00, 0x07, 0x00, // "
-    0x00, 0x14, 0x7f, 0x14, 0x7f, 0x14, // #
-    0x00, 0x24, 0x2a, 0x7f, 0x2a, 0x12, // $
-    0x00, 0x62, 0x64, 0x08, 0x13, 0x23, // %
-    0x00, 0x36, 0x49, 0x55, 0x22, 0x50, // &
-    0x00, 0x00, 0x05, 0x03, 0x00, 0x00, // '
-    0x00, 0x00, 0x1c, 0x22, 0x41, 0x00, // (
-    0x00, 0x00, 0x41, 0x22, 0x1c, 0x00, // )
-    0x00, 0x14, 0x08, 0x3E, 0x08, 0x14, // *
-    0x00, 0x08, 0x08, 0x3E, 0x08, 0x08, // +
-    0x00, 0x00, 0x00, 0xA0, 0x60, 0x00, // ,
-    0x00, 0x08, 0x08, 0x08, 0x08, 0x08, // -
-    0x00, 0x00, 0x60, 0x60, 0x00, 0x00, // .
-    0x00, 0x20, 0x10, 0x08, 0x04, 0x02, // /
-    0x00, 0x3E, 0x51, 0x49, 0x45, 0x3E, // 0
-    0x00, 0x00, 0x42, 0x7F, 0x40, 0x00, // 1
-    0x00, 0x42, 0x61, 0x51, 0x49, 0x46, // 2
-    0x00, 0x21, 0x41, 0x45, 0x4B, 0x31, // 3
-    0x00, 0x18, 0x14, 0x12, 0x7F, 0x10, // 4
-    0x00, 0x27, 0x45, 0x45, 0x45, 0x39, // 5
-    0x00, 0x3C, 0x4A, 0x49, 0x49, 0x30, // 6
-    0x00, 0x01, 0x71, 0x09, 0x05, 0x03, // 7
-    0x00, 0x36, 0x49, 0x49, 0x49, 0x36, // 8
-    0x00, 0x06, 0x49, 0x49, 0x29, 0x1E, // 9
-    0x00, 0x00, 0x36, 0x36, 0x00, 0x00, // :
-    0x00, 0x00, 0x56, 0x36, 0x00, 0x00, // ;
-    0x00, 0x08, 0x14, 0x22, 0x41, 0x00, // <
-    0x00, 0x14, 0x14, 0x14, 0x14, 0x14, // =
-    0x00, 0x00, 0x41, 0x22, 0x14, 0x08, // >
-    0x00, 0x02, 0x01, 0x51, 0x09, 0x06, // ?
-    0x00, 0x32, 0x49, 0x59, 0x51, 0x3E, // @
-    0x00, 0x7C, 0x12, 0x11, 0x12, 0x7C, // A
-    0x00, 0x7F, 0x49, 0x49, 0x49, 0x36, // B
-    0x00, 0x3E, 0x41, 0x41, 0x41, 0x22, // C
-    0x00, 0x7F, 0x41, 0x41, 0x22, 0x1C, // D
-    0x00, 0x7F, 0x49, 0x49, 0x49, 0x41, // E
-    0x00, 0x7F, 0x09, 0x09, 0x09, 0x01, // F
-    0x00, 0x3E, 0x41, 0x49, 0x49, 0x7A, // G
-    0x00, 0x7F, 0x08, 0x08, 0x08, 0x7F, // H
-    0x00, 0x00, 0x41, 0x7F, 0x41, 0x00, // I
-    0x00, 0x20, 0x40, 0x41, 0x3F, 0x01, // J
-    0x00, 0x7F, 0x08, 0x14, 0x22, 0x41, // K
-    0x00, 0x7F, 0x40, 0x40, 0x40, 0x40, // L
-    0x00, 0x7F, 0x02, 0x0C, 0x02, 0x7F, // M
-    0x00, 0x7F, 0x04, 0x08, 0x10, 0x7F, // N
-    0x00, 0x3E, 0x41, 0x41, 0x41, 0x3E, // O
-    0x00, 0x7F, 0x09, 0x09, 0x09, 0x06, // P
-    0x00, 0x3E, 0x41, 0x51, 0x21, 0x5E, // Q
-    0x00, 0x7F, 0x09, 0x19, 0x29, 0x46, // R
-    0x00, 0x46, 0x49, 0x49, 0x49, 0x31, // S
-    0x00, 0x01, 0x01, 0x7F, 0x01, 0x01, // T
-    0x00, 0x3F, 0x40, 0x40, 0x40, 0x3F, // U
-    0x00, 0x1F, 0x20, 0x40, 0x20, 0x1F, // V
-    0x00, 0x3F, 0x40, 0x38, 0x40, 0x3F, // W
-    0x00, 0x63, 0x14, 0x08, 0x14, 0x63, // X
-    0x00, 0x07, 0x08, 0x70, 0x08, 0x07, // Y
-    0x00, 0x61, 0x51, 0x49, 0x45, 0x43, // Z
-    0x00, 0x00, 0x7F, 0x41, 0x41, 0x00, // [
-    0x00, 0x55, 0x2A, 0x55, 0x2A, 0x55, // backslash
-    0x00, 0x00, 0x41, 0x41, 0x7F, 0x00, // ]
-    0x00, 0x04, 0x02, 0x01, 0x02, 0x04, // ^
-    0x00, 0x40, 0x40, 0x40, 0x40, 0x40, // _
-    0x00, 0x00, 0x01, 0x02, 0x04, 0x00, // '
-    0x00, 0x20, 0x54, 0x54, 0x54, 0x78, // a
-    0x00, 0x7F, 0x48, 0x44, 0x44, 0x38, // b
-    0x00, 0x38, 0x44, 0x44, 0x44, 0x20, // c
-    0x00, 0x38, 0x44, 0x44, 0x48, 0x7F, // d
-    0x00, 0x38, 0x54, 0x54, 0x54, 0x18, // e
-    0x00, 0x08, 0x7E, 0x09, 0x01, 0x02, // f
-    0x00, 0x18, 0xA4, 0xA4, 0xA4, 0x7C, // g
-    0x00, 0x7F, 0x08, 0x04, 0x04, 0x78, // h
-    0x00, 0x00, 0x44, 0x7D, 0x40, 0x00, // i
-    0x00, 0x40, 0x80, 0x84, 0x7D, 0x00, // j
-    0x00, 0x7F, 0x10, 0x28, 0x44, 0x00, // k
-    0x00, 0x00, 0x41, 0x7F, 0x40, 0x00, // l
-    0x00, 0x7C, 0x04, 0x18, 0x04, 0x78, // m
-    0x00, 0x7C, 0x08, 0x04, 0x04, 0x78, // n
-    0x00, 0x38, 0x44, 0x44, 0x44, 0x38, // o
-    0x00, 0xFC, 0x24, 0x24, 0x24, 0x18, // p
-    0x00, 0x18, 0x24, 0x24, 0x18, 0xFC, // q
-    0x00, 0x7C, 0x08, 0x04, 0x04, 0x08, // r
-    0x00, 0x48, 0x54, 0x54, 0x54, 0x20, // s
-    0x00, 0x04, 0x3F, 0x44, 0x40, 0x20, // t
-    0x00, 0x3C, 0x40, 0x40, 0x20, 0x7C, // u
-    0x00, 0x1C, 0x20, 0x40, 0x20, 0x1C, // v
-    0x00, 0x3C, 0x40, 0x30, 0x40, 0x3C, // w
-    0x00, 0x44, 0x28, 0x10, 0x28, 0x44, // x
-    0x00, 0x1C, 0xA0, 0xA0, 0xA0, 0x7C, // y
-    0x00, 0x44, 0x64, 0x54, 0x4C, 0x44, // z
-    0x00, 0x00, 0x08, 0x77, 0x41, 0x00, // {
-    0x00, 0x00, 0x00, 0x63, 0x00, 0x00, // ¦
-    0x00, 0x00, 0x41, 0x77, 0x08, 0x00, // }
-    0x00, 0x08, 0x04, 0x08, 0x08, 0x04, // ~
-    0x00, 0x3D, 0x40, 0x40, 0x20, 0x7D, // ü
-    0x00, 0x3D, 0x40, 0x40, 0x40, 0x3D, // Ü
-    0x00, 0x21, 0x54, 0x54, 0x54, 0x79, // ä
-    0x00, 0x7D, 0x12, 0x11, 0x12, 0x7D, // Ä
-    0x00, 0x39, 0x44, 0x44, 0x44, 0x39, // ö
-    0x00, 0x3D, 0x42, 0x42, 0x42, 0x3D, // Ö
-    0x00, 0x02, 0x05, 0x02, 0x00, 0x00, // °
-    0x00, 0x7E, 0x01, 0x49, 0x55, 0x73, // ß
-};
 
 const uint8_t init_sequence [] PROGMEM = {	// Initialization Sequence
-    LCD_DISP_OFF,			// Display OFF (sleep mode)
-    0x20, 0b00,		// Set Memory Addressing Mode
+LCD_DISP_OFF,	// Display OFF (sleep mode)
+0x20, 0b00,		// Set Memory Addressing Mode
 				// 00=Horizontal Addressing Mode; 01=Vertical Addressing Mode;
 				// 10=Page Addressing Mode (RESET); 11=Invalid
-    0xB0,			// Set Page Start Address for Page Addressing Mode, 0-7
-    0xC8,			// Set COM Output Scan Direction
-    0x00,			// --set low column address
-    0x10,			// --set high column address
-    0x40,			// --set start line address
-    0x81, 0x3F,		// Set contrast control register
-    0xA1,			// Set Segment Re-map. A0=address mapped; A1=address 127 mapped.
-    0xA6,			// Set display mode. A6=Normal; A7=Inverse
-    0xA8, 0x3F,		// Set multiplex ratio(1 to 64)
-    0xA4,			// Output RAM to Display
+0xB0,			// Set Page Start Address for Page Addressing Mode, 0-7
+0xC8,			// Set COM Output Scan Direction
+0x00,			// --set low column address
+0x10,			// --set high column address
+0x40,			// --set start line address
+0x81, 0x3F,		// Set contrast control register
+0xA1,			// Set Segment Re-map. A0=address mapped; A1=address 127 mapped.
+0xA6,			// Set display mode. A6=Normal; A7=Inverse
+0xA8, 0x3F,		// Set multiplex ratio(1 to 64)
+0xA4,			// Output RAM to Display
 				// 0xA4=Output follows RAM content; 0xA5,Output ignores RAM content
-    0xD3, 0x00,		// Set display offset. 00 = no offset
-    0xD5,			// --set display clock divide ratio/oscillator frequency
-    0xF0,			// --set divide ratio
-    0xD9, 0x22,		// Set pre-charge period
-    0xDA, 0x12,		// Set com pins hardware configuration
-    0xDB,			// --set vcomh
-    0x20,			// 0x20,0.77xVcc
-    0x8D, 0x14,		// Set DC-DC enable
-    
-    
+0xD3, 0x00,		// Set display offset. 00 = no offset
+0xD5,			// --set display clock divide ratio/oscillator frequency
+0xF0,			// --set divide ratio
+0xD9, 0x22,		// Set pre-charge period
+0xDA, 0x12,		// Set com pins hardware configuration
+0xDB,			// --set vcomh
+0x20,			// 0x20,0.77xVcc
+0x8D, 0x14,		// Set DC-DC enable
+
+
 };
+#pragma mark LCD COMMUNICATION
 void lcd_command(uint8_t cmd[], uint8_t size) {
-    i2c_start(LCD_I2C_ADR);
+    i2c_start((LCD_I2C_ADR << 1) | 0);
     i2c_byte(0x00);	// 0x00 for command, 0x40 for data
     for (uint8_t i=0; i<size; i++) {
         i2c_byte(cmd[i]);
@@ -194,13 +96,15 @@ void lcd_command(uint8_t cmd[], uint8_t size) {
     i2c_stop();
 }
 void lcd_data(uint8_t data[], uint16_t size) {
-    i2c_start(LCD_I2C_ADR);
+    i2c_start((LCD_I2C_ADR << 1) | 0);
     i2c_byte(0x40);	// 0x00 for command, 0x40 for data
     for (uint16_t i = 0; i<size; i++) {
         i2c_byte(data[i]);
     }
     i2c_stop();
 }
+#pragma mark -
+#pragma mark GENERAL FUNKTIONS
 void lcd_init(uint8_t dispAttr){
     i2c_init();
     uint8_t commandSequence[sizeof(init_sequence)+1];
@@ -215,7 +119,7 @@ void lcd_home(void){
     lcd_gotoxy(0, 0);
 }
 void lcd_invert(uint8_t invert){
-    i2c_start(LCD_I2C_ADR);
+    i2c_start((LCD_I2C_ADR << 1) | 0);
     uint8_t commandSequence[1];
     if (invert == YES) {
         commandSequence[0] = 0xA7;
@@ -240,6 +144,8 @@ void lcd_puts_p(const char* progmem_s){
     }
 }
 #if defined TEXTMODE
+#pragma mark -
+#pragma mark TEXTMODE
 void lcd_clrscr(void){
     uint8_t clearLine[DISPLAY_WIDTH];
     memset(clearLine, 0x00, DISPLAY_WIDTH);
@@ -252,7 +158,8 @@ void lcd_clrscr(void){
 }
 void lcd_gotoxy(uint8_t x, uint8_t y) {
     if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
-    cursorPosition=x;
+    cursorPosition.x=x;
+	cursorPosition.y=y;
     x = x * 6;					// one char: 6 pixel width
 #if defined SSD1306
     uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
@@ -262,91 +169,48 @@ void lcd_gotoxy(uint8_t x, uint8_t y) {
     lcd_command(commandSequence, sizeof(commandSequence));
 }
 void lcd_putc(char c){
-    if((c > 127 ||
-        cursorPosition > 20 ||
-        c < 32) &&
-       (c != 'ü' &&
-        c != 'ö' &&
-        c != '°' &&
-        c != 'ä' &&
-        c != 'ß' &&
-        c != 'Ü' &&
-        c != 'Ö' &&
-        c != 'Ä' ) ) return;
-    cursorPosition++;
-    i2c_start(LCD_I2C_ADR);
-    i2c_byte(0x40);	// 0x00 for command, 0x40 for data
-    switch (c) {
-        case 'ü':
-            c = 95; // ü
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        case 'ö':
-            c = 99; // ö
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        case '°':
-            c = 101; // °
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        case 'ä':
-            c = 97; // ä
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        case 'ß':
-            c = 102; // ß
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        case 'Ü':
-            c = 96; // Ü
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        case 'Ö':
-            c = 100; // Ö
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        case 'Ä':
-            c = 98; // Ä
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-            }
-            break;
-        default:
-            c -= 32;
-            if( c < 127-32 ) {
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    i2c_byte(pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]));	// print font to ram, print 6 columns
-                }
-                //return;
-            }
-            break;
-    }
-    i2c_stop();
+	switch (c) {
+		case '\t':
+			// tab
+			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/6-4) ){
+				lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
+			}else{
+				lcd_gotoxy(DISPLAY_WIDTH/6, cursorPosition.y);
+			}
+			break;
+		case '\n':
+			// linefeed
+			if(cursorPosition.y < (DISPLAY_HEIGHT/8-1)){
+				lcd_gotoxy(cursorPosition.x, ++cursorPosition.y);
+			}
+			break;
+		case '\r':
+			// carrige return
+			lcd_gotoxy(0, cursorPosition.y);
+			break;
+		default:
+			if((c > 127 ||
+				cursorPosition.x > 20 ||
+				c < 32) &&
+			   (getCharCode(c) > 0) ) return;
+			cursorPosition.x++;
+			// mapping char
+			c=getCharCode(c);	 
+			uint8_t temp;
+			// print char at display
+			for (uint8_t i = 0; i < 6; i++)
+			{
+				// load bit-pattern from flash
+				temp=pgm_read_byte(&font[c * 6 + i]);
+				lcd_data((void*)&temp,1);	// print font to ram, print 6 columns
+			}
+			break;
+	}
+    
 }
 #elif defined GRAPHICMODE
+#pragma mark -
+#pragma mark GRAPHICMODE
 void lcd_clrscr(void){
     memset(displayBuffer, 0x00, sizeof(displayBuffer));
 #if defined SSD1306
@@ -365,7 +229,8 @@ void lcd_clrscr(void){
 }
 void lcd_gotoxy(uint8_t x, uint8_t y){
     if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
-    cursorPosition=x;
+    cursorPosition.x=x;
+	cursorPosition.y=y;
     x = x * 6;					// one char: 6 pixel width
     actualIndex = (x)+(y*DISPLAY_WIDTH);
 #if defined SSD1306
@@ -376,86 +241,46 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
     lcd_command(commandSequence, sizeof(commandSequence));
 }
 void lcd_putc(char c){
-    if((actualIndex+1)%127 != 0){
-        if((c > 127 ||
-            cursorPosition > 20 ||
-            c < 32) &&
-           (c != 'ü' &&
-            c != 'ö' &&
-            c != '°' &&
-            c != 'ä' &&
-            c != 'ß' &&
-            c != 'Ü' &&
-            c != 'Ö' &&
-            c != 'Ä' ) ) return;
-        cursorPosition++;
-        switch (c) {
-            case 'ü':
-                c = 95; // ü - 188
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            case 'ö':
-                c = 99; // ö
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            case '°':
-                c = 101; // °
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            case 'ä':
-                c = 97; // ä
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            case 'ß':
-                c = 102; // ß
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            case 'Ü':
-                c = 96; // Ü
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            case 'Ö':
-                c = 100; // Ö
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            case 'Ä':
-                c = 98; // Ä
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);	// print font to ram, print 6 columns
-                }
-                break;
-            default:
-                c -= 32;
-                for (uint8_t i = 0; i < 6; i++)
-                {
-                    displayBuffer[actualIndex+i] = pgm_read_byte(&ssd1306oled_font6x8[c * 6 + i]);
-                }
-                break;
-        }
-    }
-    actualIndex += 6;
+	switch (c) {
+		case '\t':
+			// tab
+			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/6-4) ){
+				lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
+			}else{
+				lcd_gotoxy(DISPLAY_WIDTH/6, cursorPosition.y);
+			}
+			break;
+		case '\n':
+			// linefeed
+			if(cursorPosition.y < (DISPLAY_HEIGHT/8-1)){
+				lcd_gotoxy(cursorPosition.x, ++cursorPosition.y);
+			}
+			break;
+		case '\r':
+			// carrige return
+			lcd_gotoxy(0, cursorPosition.y);
+			break;
+		default:
+			if((actualIndex+1)%127 != 0){
+				if((c > 127 ||
+					cursorPosition.x > 20 ||
+					c < 32) &&
+				   (getCharCode(c) > 0) ) return;
+				cursorPosition.x++;
+				// mapping char
+				c=getCharCode(c);	 
+				
+				// print char at display
+				for (uint8_t i = 0; i < 6; i++)
+				{
+					// load bit-pattern from flash
+					displayBuffer[actualIndex+i] =pgm_read_byte(&font[c * 6 + i]);
+				}  
+				
+			}
+			actualIndex += 6;
+			break;
+	}
 }
 
 void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color){
