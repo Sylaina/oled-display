@@ -15,22 +15,22 @@
  *
  * Diese Datei ist Teil von lcd library for ssd1306/sh1106 oled-display.
  *
- * lcd library for ssd1306/sh1106 oled-display ist Freie Software: Sie kÃ¶nnen es unter den Bedingungen
+ * lcd library for ssd1306/sh1106 oled-display ist Freie Software: Sie können es unter den Bedingungen
  * der GNU General Public License, wie von der Free Software Foundation,
- * Version 3 der Lizenz oder jeder spÃ¤teren
- * verÃ¶ffentlichten Version, weiterverbreiten und/oder modifizieren.
+ * Version 3 der Lizenz oder jeder späteren
+ * veröffentlichten Version, weiterverbreiten und/oder modifizieren.
  *
- * lcd library for ssd1306/sh1106 oled-display wird in der Hoffnung, dass es nÃ¼tzlich sein wird, aber
- * OHNE JEDE GEWÃ„HRLEISTUNG, bereitgestellt; sogar ohne die implizite
- * GewÃ¤hrleistung der MARKTFÃ„HIGKEIT oder EIGNUNG FÃœR EINEN BESTIMMTEN ZWECK.
- * Siehe die GNU General Public License fÃ¼r weitere Details.
+ * lcd library for ssd1306/sh1106 oled-display wird in der Hoffnung, dass es nützlich sein wird, aber
+ * OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
+ * Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
+ * Siehe die GNU General Public License für weitere Details.
  *
  * Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
  * Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
  *
  *  lcd.h
  *
- *  Created by Michael Koehler on 22.12.16.
+ *  Created by Michael Köhler on 22.12.16.
  *  Copyright 2016 Skie-Systems. All rights reserved.
  *
  *  lib for OLED-Display with ssd1306/sh1106-Controller
@@ -44,9 +44,6 @@
 #include "lcd.h"
 #include "font.h"
 #include <string.h>
-
-/* TODO: setUp Font*/
-const char *font = ssd1306oled_font6x8;
 
 static struct {
 	uint8_t x;
@@ -121,8 +118,8 @@ void lcd_home(void){
 void lcd_invert(uint8_t invert){
     i2c_start((LCD_I2C_ADR << 1) | 0);
     uint8_t commandSequence[1];
-    if (invert == YES) {
-        commandSequence[0] = 0xA7;
+    if (invert != YES) {
+        commandSequence[0] = 0xA6;
     } else {
         commandSequence[0] = 0xA7;
     }
@@ -157,10 +154,10 @@ void lcd_clrscr(void){
     lcd_home();
 }
 void lcd_gotoxy(uint8_t x, uint8_t y) {
-    if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    if( x > (DISPLAY_WIDTH/sizeof(FONT[0])) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
     cursorPosition.x=x;
 	cursorPosition.y=y;
-    x = x * 6;					// one char: 6 pixel width
+    x = x * sizeof(FONT[0]);
 #if defined SSD1306
     uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
 #elif defined SH1106
@@ -170,12 +167,18 @@ void lcd_gotoxy(uint8_t x, uint8_t y) {
 }
 void lcd_putc(char c){
 	switch (c) {
+		case '\b':
+			// backspace
+			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+			lcd_putc(' ');
+			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+			break;
 		case '\t':
 			// tab
-			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/6-4) ){
+			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/ sizeof(FONT[0])-4) ){
 				lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
 			}else{
-				lcd_gotoxy(DISPLAY_WIDTH/6, cursorPosition.y);
+				lcd_gotoxy(DISPLAY_WIDTH/ sizeof(FONT[0]), cursorPosition.y);
 			}
 			break;
 		case '\n':
@@ -189,21 +192,20 @@ void lcd_putc(char c){
 			lcd_gotoxy(0, cursorPosition.y);
 			break;
 		default:
-			if((c > 127 ||
-				cursorPosition.x > 20 ||
-				c < 32) &&
-			   (getCharCode(c) > 0) ) return;
+			if( (cursorPosition.x > 20) ||
+			   (getCharPosition(c) == 0xff) ) return;
 			cursorPosition.x++;
 			// mapping char
-			c=getCharCode(c);	 
+			c=getCharPosition(c);	 
 			uint8_t temp;
 			// print char at display
-			for (uint8_t i = 0; i < 6; i++)
+			for (uint8_t i = 0; i <  sizeof(FONT[0]); i++)
 			{
 				// load bit-pattern from flash
-				temp=pgm_read_byte(&font[c * 6 + i]);
+				temp=pgm_read_byte(&(FONT[(uint8_t)c][i]));
 				lcd_data((void*)&temp,1);	// print font to ram, print 6 columns
 			}
+			
 			break;
 	}
     
@@ -228,10 +230,10 @@ void lcd_clrscr(void){
     lcd_home();
 }
 void lcd_gotoxy(uint8_t x, uint8_t y){
-    if( x > (DISPLAY_WIDTH/6) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    if( x > (DISPLAY_WIDTH/sizeof(FONT[0])) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
     cursorPosition.x=x;
 	cursorPosition.y=y;
-    x = x * 6;					// one char: 6 pixel width
+    x = x * sizeof(FONT[0]);
     actualIndex = (x)+(y*DISPLAY_WIDTH);
 #if defined SSD1306
     uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
@@ -242,12 +244,18 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
 }
 void lcd_putc(char c){
 	switch (c) {
+		case '\b':
+			// backspace
+			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+			lcd_putc(' ');
+			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+			break;
 		case '\t':
 			// tab
-			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/6-4) ){
+			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/sizeof(FONT[0])-4) ){
 				lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
 			}else{
-				lcd_gotoxy(DISPLAY_WIDTH/6, cursorPosition.y);
+				lcd_gotoxy(DISPLAY_WIDTH/sizeof(FONT[0]), cursorPosition.y);
 			}
 			break;
 		case '\n':
@@ -262,23 +270,21 @@ void lcd_putc(char c){
 			break;
 		default:
 			if((actualIndex+1)%127 != 0){
-				if((c > 127 ||
-					cursorPosition.x > 20 ||
-					c < 32) &&
-				   (getCharCode(c) > 0) ) return;
+				if( (cursorPosition.x > 20) ||
+				   (getCharPosition(c) == 0xff) ) return;
 				cursorPosition.x++;
 				// mapping char
-				c=getCharCode(c);	 
+				c=getCharPosition(c);	 
 				
 				// print char at display
-				for (uint8_t i = 0; i < 6; i++)
+				 for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
 				{
 					// load bit-pattern from flash
-					displayBuffer[actualIndex+i] =pgm_read_byte(&font[c * 6 + i]);
+					displayBuffer[actualIndex+i] =pgm_read_byte(&(FONT[(uint8_t)c][i]));;
 				}  
 				
 			}
-			actualIndex += 6;
+			actualIndex += sizeof(FONT[0]);
 			break;
 	}
 }
