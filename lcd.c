@@ -196,16 +196,16 @@ void lcd_putc(char c){
 			   (getCharPosition(c) == 0xff) ) return;
 			cursorPosition.x++;
 			// mapping char
-			c=getCharPosition(c);	 
-			uint8_t temp;
+			c=getCharPosition(c);
 			// print char at display
+			i2c_start((LCD_I2C_ADR << 1) | 0);
+			i2c_byte(0x40)
 			for (uint8_t i = 0; i <  sizeof(FONT[0]); i++)
 			{
-				// load bit-pattern from flash
-				temp=pgm_read_byte(&(FONT[(uint8_t)c][i]));
-				lcd_data((void*)&temp,1);	// print font to ram, print 6 columns
+				// print font to ram, print 6 columns
+				i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));	
 			}
-			
+			i2c_stop();
 			break;
 	}
     
