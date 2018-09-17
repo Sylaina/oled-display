@@ -197,7 +197,9 @@ void lcd_putc(char c){
             break;
         default:
             // mapping char
-            //c=getCharPosition(c);
+            if (c < ' ') {
+                break;
+            }
             c -= ' ';
             if (c >= pgm_read_byte(&special_char[0][1]) ) {
                 c = 0xff;
