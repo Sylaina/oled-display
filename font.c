@@ -1,8 +1,8 @@
 /*
  *  font.c
- *  
+ *  i2c
  *
- *  Created by Michael Köhler on 13.09.18.
+ *  Created by Michael Köhler on 16.09.18.
  *  Copyright 2018 Skie-Systems. All rights reserved.
  *
  */
@@ -113,48 +113,18 @@ const char ssd1306oled_font[][6] PROGMEM = {
 {0x00, 0x3D, 0x42, 0x42, 0x42, 0x3D}, // Ö
 {0x00, 0x02, 0x05, 0x02, 0x00, 0x00}, // °
 {0x00, 0x7E, 0x01, 0x49, 0x55, 0x73}, // ß
-{0x00, 0x7C, 0x20, 0x20, 0x10, 0x1C}, // µ
+{0x00, 0x7C, 0x10, 0x10, 0x08, 0x1C} // µ
 };
-
-uint8_t getCharPosition(char value){
-	// getting chars position at font-array
-	switch (value) {
-        case 'ü':
-            value = 95; // ü
-            break;
-        case 'Ü':
-            value = 96; // Ü
-            break;
-        case 'ä':
-            value = 97; // ä
-            break;
-        case 'Ä':
-            value = 98; // Ä
-            break;
-        case 'ö':
-            value = 99; // ö
-            break;
-        case 'Ö':
-            value = 100; // Ö
-            break;
-        case '°':
-            value = 101; // °
-            break;
-        case 'ß':
-            value = 102; // ß
-            break;
-		case 'µ':
-            value = 103; // µ
-            break;
-        default:
-            value -= 32;
-            if( value > 127-32 ) {
-				return 0xff;
-            }
-            break;
-	}
-	// return char-position at font-array
-	return value;
-}
-
-#endif
+const char special_char[][2] PROGMEM = {
+    // define position of special char in font
+    {'ü', 95},
+    {'Ü', 96},
+    {'ä', 97},
+    {'Ä', 98},
+    {'ö', 99},
+    {'Ö', 100},
+    {'°', 101},
+    {'ß', 102},
+    {'µ', 103},
+    {0xff, 0xff} // end of table special_char
+};
