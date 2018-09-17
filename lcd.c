@@ -196,10 +196,19 @@ void lcd_putc(char c){
             lcd_gotoxy(0, cursorPosition.y);
             break;
         default:
-            if( (cursorPosition.x > 20) ||
-               (getCharPosition(c) == 0xff) ) return;
             // mapping char
-            c=getCharPosition(c);
+            //c=getCharPosition(c);
+            c -= ' ';
+            if (c >= pgm_read_byte(&special_char[0][1]) ) {
+                c = 0xff;
+                for (uint8_t i=0; pgm_read_byte(&special_char[i][1]) != 0xff; i++) {
+                    if ( pgm_read_byte(&special_char[i][0])-' ' == c ) {
+                        c = pgm_read_byte(&special_char[i][1]);
+                    }
+                }
+            }
+            if( (cursorPosition.x > 20) ||
+               (c == 0xff) ) return;
             // print char at display
 #ifdef GRAPHICMODE
             for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
