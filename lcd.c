@@ -37,8 +37,11 @@
  *  first dev-version only for I2C-Connection
  *  at ATMega328P like Arduino Uno
  *
- *  at GRAPHICMODE lib needs SRAM for display
+ *  at GRAPHICMODE lib needs static SRAM for display:
  *  DISPLAY-WIDTH * DISPLAY-HEIGHT + 2 bytes
+ *  
+ *  at TEXTMODE lib need static SRAM for display:
+ *  2 bytes (cursorPosition)
  */
 
 #include "lcd.h"
@@ -52,7 +55,6 @@ static struct {
 #if defined GRAPHICMODE
 #include <stdlib.h>
 static uint8_t displayBuffer[DISPLAYSIZE];
-uint16_t actualIndex = 0;
 #endif
 
 
@@ -112,6 +114,44 @@ void lcd_init(uint8_t dispAttr){
     lcd_command(commandSequence, sizeof(commandSequence));
     lcd_clrscr();
 }
+void lcd_gotoxy(uint8_t x, uint8_t y){
+    if( x > (DISPLAY_WIDTH/sizeof(FONT[0])) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    cursorPosition.x=x;
+    cursorPosition.y=y;
+    x = x * sizeof(FONT[0]);
+#if defined SSD1306
+    uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
+#elif defined SH1106
+    uint8_t commandSequence[] = {0xb0+y, 0x21, 0x00+((2+x) & (0x0f)), 0x10+( ((2+x) & (0xf0)) >> 4 ), 0x7f};
+#endif
+    lcd_command(commandSequence, sizeof(commandSequence));
+}
+void lcd_clrscr(void){
+#ifdef GRAPHICMODE
+    memset(displayBuffer, 0x00, sizeof(displayBuffer));
+#if defined SSD1306
+    lcd_data(displayBuffer, sizeof(displayBuffer));
+#elif defined SH1106
+    for (uint8_t i=0; i <= DISPLAY_HEIGHT/8; i++) {
+        uint8_t actualLine[DISPLAY_WIDTH];
+        for (uint8_t j=0; j< DISPLAY_WIDTH; j++) {
+            actualLine[j]=displayBuffer[i*DISPLAY_WIDTH+j];
+        }
+        lcd_data(actualLine, sizeof(actualLine));
+        lcd_gotoxy(0, i);
+    }
+#endif
+#elif defined TEXTMODE
+    uint8_t clearLine[DISPLAY_WIDTH];
+    memset(clearLine, 0x00, DISPLAY_WIDTH);
+    for (uint8_t j = 0; j < DISPLAY_HEIGHT/8; j++){
+        lcd_gotoxy(0,j);
+        lcd_data(clearLine, sizeof(clearLine));
+    }
+    lcd_home();
+#endif
+    lcd_home();
+}
 void lcd_home(void){
     lcd_gotoxy(0, 0);
 }
@@ -129,6 +169,59 @@ void lcd_set_contrast(uint8_t contrast){
     uint8_t commandSequence[2] = {0x81, contrast};
     lcd_command(commandSequence, sizeof(commandSequence));
 }
+void lcd_putc(char c){
+    switch (c) {
+        case '\b':
+            // backspace
+            lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+            lcd_putc(' ');
+            lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+            break;
+        case '\t':
+            // tab
+            if( (cursorPosition.x+4) < (DISPLAY_WIDTH/ sizeof(FONT[0])-4) ){
+                lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
+            }else{
+                lcd_gotoxy(DISPLAY_WIDTH/ sizeof(FONT[0]), cursorPosition.y);
+            }
+            break;
+        case '\n':
+            // linefeed
+            if(cursorPosition.y < (DISPLAY_HEIGHT/8-1)){
+                lcd_gotoxy(cursorPosition.x, ++cursorPosition.y);
+            }
+            break;
+        case '\r':
+            // carrige return
+            lcd_gotoxy(0, cursorPosition.y);
+            break;
+        default:
+            if( (cursorPosition.x > 20) ||
+               (getCharPosition(c) == 0xff) ) return;
+            // mapping char
+            c=getCharPosition(c);
+            // print char at display
+#ifdef GRAPHICMODE
+            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+            {
+                // load bit-pattern from flash
+                displayBuffer[cursorPosition.x+i+((cursorPosition.x*sizeof(FONT[0]))+(cursorPosition.y*DISPLAY_WIDTH))] =pgm_read_byte(&(FONT[(uint8_t)c][i]));;
+            }
+#elif defined TEXTMODE
+            i2c_start(LCD_I2C_ADR << 1);
+            i2c_byte(0x40);
+            for (uint8_t i = 0; i <  sizeof(FONT[0]); i++)
+            {
+                // print font to ram, print 6 columns
+                i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));
+            }
+            i2c_stop();
+#endif
+            cursorPosition.x++;
+            break;
+    }
+    
+}
 void lcd_puts(const char* s){
     while (*s) {
         lcd_putc(*s++);
@@ -140,155 +233,9 @@ void lcd_puts_p(const char* progmem_s){
         lcd_putc(c);
     }
 }
-#if defined TEXTMODE
+#ifdef GRAPHICMODE
 #pragma mark -
-#pragma mark TEXTMODE
-void lcd_clrscr(void){
-    uint8_t clearLine[DISPLAY_WIDTH];
-    memset(clearLine, 0x00, DISPLAY_WIDTH);
-    for (uint8_t j = 0; j < DISPLAY_HEIGHT/8; j++){
-        lcd_gotoxy(0,j);
-        lcd_data(clearLine, sizeof(clearLine));
-        
-    }
-    lcd_home();
-}
-void lcd_gotoxy(uint8_t x, uint8_t y) {
-    if( x > (DISPLAY_WIDTH/sizeof(FONT[0])) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
-    cursorPosition.x=x;
-	cursorPosition.y=y;
-    x = x * sizeof(FONT[0]);
-#if defined SSD1306
-    uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
-#elif defined SH1106
-    uint8_t commandSequence[] = {0xb0+y, 0x21, 0x00+((2+x) & (0x0f)), 0x10+( ((2+x) & (0xf0)) >> 4 ), 0x7f};
-#endif
-    lcd_command(commandSequence, sizeof(commandSequence));
-}
-void lcd_putc(char c){
-	switch (c) {
-		case '\b':
-			// backspace
-			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
-			lcd_putc(' ');
-			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
-			break;
-		case '\t':
-			// tab
-			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/ sizeof(FONT[0])-4) ){
-				lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
-			}else{
-				lcd_gotoxy(DISPLAY_WIDTH/ sizeof(FONT[0]), cursorPosition.y);
-			}
-			break;
-		case '\n':
-			// linefeed
-			if(cursorPosition.y < (DISPLAY_HEIGHT/8-1)){
-				lcd_gotoxy(cursorPosition.x, ++cursorPosition.y);
-			}
-			break;
-		case '\r':
-			// carrige return
-			lcd_gotoxy(0, cursorPosition.y);
-			break;
-		default:
-			if( (cursorPosition.x > 20) ||
-			   (getCharPosition(c) == 0xff) ) return;
-			cursorPosition.x++;
-			// mapping char
-			c=getCharPosition(c);
-			// print char at display
-			i2c_start((LCD_I2C_ADR << 1) | 0);
-			i2c_byte(0x40)
-			for (uint8_t i = 0; i <  sizeof(FONT[0]); i++)
-			{
-				// print font to ram, print 6 columns
-				i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));	
-			}
-			i2c_stop();
-			break;
-	}
-    
-}
-#elif defined GRAPHICMODE
-#pragma mark -
-#pragma mark GRAPHICMODE
-void lcd_clrscr(void){
-    memset(displayBuffer, 0x00, sizeof(displayBuffer));
-#if defined SSD1306
-    lcd_data(displayBuffer, sizeof(displayBuffer));
-#elif defined SH1106
-    for (uint8_t i=0; i <= DISPLAY_HEIGHT/8; i++) {
-        uint8_t actualLine[DISPLAY_WIDTH];
-        for (uint8_t j=0; j< DISPLAY_WIDTH; j++) {
-            actualLine[j]=displayBuffer[i*DISPLAY_WIDTH+j];
-        }
-        lcd_data(actualLine, sizeof(actualLine));
-        lcd_gotoxy(0, i);
-    }
-#endif
-    lcd_home();
-}
-void lcd_gotoxy(uint8_t x, uint8_t y){
-    if( x > (DISPLAY_WIDTH/sizeof(FONT[0])) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
-    cursorPosition.x=x;
-	cursorPosition.y=y;
-    x = x * sizeof(FONT[0]);
-    actualIndex = (x)+(y*DISPLAY_WIDTH);
-#if defined SSD1306
-    uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
-#elif defined SH1106
-    uint8_t commandSequence[] = {0xb0+y, 0x21, 0x00+((2+x) & (0x0f)), 0x10+( ((2+x) & (0xf0)) >> 4 ), 0x7f};
-#endif
-    lcd_command(commandSequence, sizeof(commandSequence));
-}
-void lcd_putc(char c){
-	switch (c) {
-		case '\b':
-			// backspace
-			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
-			lcd_putc(' ');
-			lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
-			break;
-		case '\t':
-			// tab
-			if( (cursorPosition.x+4) < (DISPLAY_WIDTH/sizeof(FONT[0])-4) ){
-				lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
-			}else{
-				lcd_gotoxy(DISPLAY_WIDTH/sizeof(FONT[0]), cursorPosition.y);
-			}
-			break;
-		case '\n':
-			// linefeed
-			if(cursorPosition.y < (DISPLAY_HEIGHT/8-1)){
-				lcd_gotoxy(cursorPosition.x, ++cursorPosition.y);
-			}
-			break;
-		case '\r':
-			// carrige return
-			lcd_gotoxy(0, cursorPosition.y);
-			break;
-		default:
-			if((actualIndex+1)%127 != 0){
-				if( (cursorPosition.x > 20) ||
-				   (getCharPosition(c) == 0xff) ) return;
-				cursorPosition.x++;
-				// mapping char
-				c=getCharPosition(c);	 
-				
-				// print char at display
-				 for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
-				{
-					// load bit-pattern from flash
-					displayBuffer[actualIndex+i] =pgm_read_byte(&(FONT[(uint8_t)c][i]));;
-				}  
-				
-			}
-			actualIndex += sizeof(FONT[0]);
-			break;
-	}
-}
-
+#pragma mark GRAPHIC FUNKCTIONS
 void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color){
     if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return; // out of Display
     if( color == WHITE){
