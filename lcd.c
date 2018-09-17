@@ -216,7 +216,7 @@ void lcd_putc(char c){
             for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
             {
                 // load bit-pattern from flash
-                displayBuffer[cursorPosition.x+i+((cursorPosition.x*sizeof(FONT[0]))+(cursorPosition.y*DISPLAY_WIDTH))] =pgm_read_byte(&(FONT[(uint8_t)c][i]));;
+                displayBuffer[cursorPosition.x+i+(cursorPosition.x*(sizeof(FONT[0])-1)+(cursorPosition.y*DISPLAY_WIDTH))] =pgm_read_byte(&(FONT[(uint8_t)c][i]));;
             }
 #elif defined TEXTMODE
             i2c_start(LCD_I2C_ADR << 1);
