@@ -104,8 +104,10 @@ const char ssd1306oled_font[][6] PROGMEM = {
 {0x00, 0x00, 0x00, 0x63, 0x00, 0x00}, // ¦
 {0x00, 0x00, 0x41, 0x77, 0x08, 0x00}, // }
 {0x00, 0x08, 0x04, 0x08, 0x08, 0x04}, // ~
-/* put your own signs/chars here, edit getCharCode() too */
-{0x00, 0x3A, 0x40, 0x40, 0x20, 0x7A}, // ü
+/* end of normal char-set */
+/* put your own signs/chars here, edit special_char too */
+/* be sure that your first special char stand here */
+{0x00, 0x3A, 0x40, 0x40, 0x20, 0x7A}, // ü, !!! Important: this must be special_char[0] !!!
 {0x00, 0x3D, 0x40, 0x40, 0x40, 0x3D}, // Ü
 {0x00, 0x21, 0x54, 0x54, 0x54, 0x79}, // ä
 {0x00, 0x7D, 0x12, 0x11, 0x12, 0x7D}, // Ä
@@ -117,7 +119,11 @@ const char ssd1306oled_font[][6] PROGMEM = {
 };
 const char special_char[][2] PROGMEM = {
     // define position of special char in font
-    {'ü', 95},
+    // {special char, position in font}
+    // be sure that last element of this
+    // array are {0xff, 0xff} and first element
+    // are {first special char, first element after normal char-set in font}
+    {'ü', 95},  // special_char[0]
     {'Ü', 96},
     {'ä', 97},
     {'Ä', 98},
