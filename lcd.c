@@ -54,7 +54,7 @@ static struct {
 } cursorPosition;
 #if defined GRAPHICMODE
 #include <stdlib.h>
-static uint8_t displayBuffer[DISPLAYSIZE];
+static uint8_t displayBuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
 #endif
 
 
@@ -128,27 +128,18 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
 }
 void lcd_clrscr(void){
 #ifdef GRAPHICMODE
-    memset(displayBuffer, 0x00, sizeof(displayBuffer));
-#if defined SSD1306
-    lcd_data(displayBuffer, sizeof(displayBuffer));
-#elif defined SH1106
-    for (uint8_t i=0; i <= DISPLAY_HEIGHT/8; i++) {
-        uint8_t actualLine[DISPLAY_WIDTH];
-        for (uint8_t j=0; j< DISPLAY_WIDTH; j++) {
-            actualLine[j]=displayBuffer[i*DISPLAY_WIDTH+j];
-        }
-        lcd_data(actualLine, sizeof(actualLine));
-        lcd_gotoxy(0, i);
+    for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
+	memset(displayBuffer[i], 0x00, sizeof(displayBuffer[i]));
+        lcd_gotoxy(0,i);
+        lcd_data(displayBuffer[i], sizeof(displayBuffer[i]));
     }
-#endif
 #elif defined TEXTMODE
-    uint8_t clearLine[DISPLAY_WIDTH];
-    memset(clearLine, 0x00, DISPLAY_WIDTH);
-    for (uint8_t j = 0; j < DISPLAY_HEIGHT/8; j++){
-        lcd_gotoxy(0,j);
-        lcd_data(clearLine, sizeof(clearLine));
+    uint8_t displayBuffer[DISPLAY_WIDTH];
+    memset(displayBuffer, 0x00, sizeof(displayBuffer));
+    for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
+        lcd_gotoxy(0,i);
+        lcd_data(displayBuffer, sizeof(displayBuffer));
     }
-    lcd_home();
 #endif
     lcd_home();
 }
@@ -226,7 +217,7 @@ void lcd_putc(char c){
             for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
             {
                 // load bit-pattern from flash
-                displayBuffer[cursorPosition.x+i+(cursorPosition.x*(sizeof(FONT[0])-1)+(cursorPosition.y*DISPLAY_WIDTH))] =pgm_read_byte(&(FONT[(uint8_t)c][i]));;
+                displayBuffer[cursorPosition.y][cursorPosition.x+i] =pgm_read_byte(&(FONT[(uint8_t)c][i]));
             }
 #elif defined TEXTMODE
             i2c_start(LCD_I2C_ADR << 1);
@@ -238,7 +229,7 @@ void lcd_putc(char c){
             }
             i2c_stop();
 #endif
-            cursorPosition.x++;
+            cursorPosition.x += sizeof(FONT[0]);
             break;
     }
     
@@ -260,9 +251,9 @@ void lcd_puts_p(const char* progmem_s){
 void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color){
     if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return; // out of Display
     if( color == WHITE){
-        displayBuffer[(uint8_t)(y / (DISPLAY_HEIGHT/8)) * DISPLAY_WIDTH +x] |= (1 << (y % (DISPLAY_HEIGHT/8)));
+        displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] |= (1 << (y % (DISPLAY_HEIGHT/8)));
     } else {
-        displayBuffer[(uint8_t)(y / (DISPLAY_HEIGHT/8)) * DISPLAY_WIDTH +x] &= ~(1 << (y % (DISPLAY_HEIGHT/8)));
+        displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] &= ~(1 << (y % (DISPLAY_HEIGHT/8)));
     }
 }
 void lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color){
@@ -357,18 +348,10 @@ void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t *picture, uint8_t width,
     }
 }
 void lcd_display() {
-#if defined SSD1306
-    lcd_gotoxy(0,0);
-    lcd_data(displayBuffer, sizeof(displayBuffer));
-#elif defined SH1106
-    for (uint8_t i=0; i < DISPLAY_HEIGHT/8; i++) {
-        lcd_gotoxy(0, i);
-        uint8_t actualLine[DISPLAY_WIDTH];
-        for (uint8_t j=0; j < DISPLAY_WIDTH; j++) {
-            actualLine[j]=displayBuffer[i*DISPLAY_WIDTH+j];
-        }
-        lcd_data(actualLine, sizeof(actualLine));
+    for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
+        lcd_gotoxy(0,i);
+        lcd_data(displayBuffer[i], sizeof(displayBuffer[i]));
     }
-#endif
+    lcd_home();
 }
 #endif
