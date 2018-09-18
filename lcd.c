@@ -103,7 +103,7 @@ void lcd_data(uint8_t data[], uint16_t size) {
     i2c_stop();
 }
 #pragma mark -
-#pragma mark GENERAL FUNKTIONS
+#pragma mark GENERAL FUNCTIONS
 void lcd_init(uint8_t dispAttr){
     i2c_init();
     uint8_t commandSequence[sizeof(init_sequence)+1];
@@ -162,6 +162,16 @@ void lcd_invert(uint8_t invert){
         commandSequence[0] = 0xA6;
     } else {
         commandSequence[0] = 0xA7;
+    }
+    lcd_command(commandSequence, 1);
+}
+void lcd_sleep(uint8_t sleep){
+    i2c_start((LCD_I2C_ADR << 1) | 0);
+    uint8_t commandSequence[1];
+    if (sleep != YES) {
+        commandSequence[0] = 0xAF;
+    } else {
+        commandSequence[0] = 0xAE;
     }
     lcd_command(commandSequence, 1);
 }
