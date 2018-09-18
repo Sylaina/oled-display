@@ -21,7 +21,7 @@ Oled (GFX)  | 2049 Byte    | 1026 Byte
 
 Speed:
 
-Print one line with 20 chars
+Print one line with 20 chars (Atmega328p with 8 MHz internal RC)
 
 Mode        | Time       | I2C-Speed
 ------------+------------+------------
