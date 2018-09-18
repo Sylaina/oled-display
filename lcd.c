@@ -213,7 +213,7 @@ void lcd_putc(char c){
                     }
                 }
             }
-            if( (cursorPosition.x > DISPLAY_WIDTH-1-sizeof(FONT[0])) ||
+            if( (cursorPosition.x >= DISPLAY_WIDTH-sizeof(FONT[0])) ||
                (c == 0xff) ) return;
             // print char at display
 #ifdef GRAPHICMODE
@@ -250,7 +250,7 @@ void lcd_puts_p(const char* progmem_s){
 }
 #ifdef GRAPHICMODE
 #pragma mark -
-#pragma mark GRAPHIC FUNKCTIONS
+#pragma mark GRAPHIC FUNCTIONS
 void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color){
     if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return; // out of Display
     if( color == WHITE){
