@@ -10,6 +10,27 @@ Settings for display have to set at lcd.h
 
 If you want to use characters like e.g. ä set your compiler input-charset to utf-8 and your compiler exec-charset to iso-8859-15 (look at makefile line 115).
 
+Memory:
+
+Modul       | Flash        | Stat. RAM
+------------+--------------+------------
+I2C-Core    | 120 Byte     |    0
+FONT        | 644 Byte     |    0
+Oled (TXT)  | 891 Byte     |    2 Byte
+Oled (GFX)  | 2049 Byte    | 1026 Byte
+
+Speed:
+
+Print one line with 20 chars
+
+Mode        | Time       | I2C-Speed
+------------+------------+------------
+Oled (TXT)  | 4.154 ms   | 400 kHz
+Oled (TXT)  | 14.587 ms  | 100 kHz
+Oled (GFX)  | 25.427 ms  | 400 kHz
+Oled (GFX)  | 90.201 ms  | 100 kHz
+
+
 example:
 
 //****main.c****//
