@@ -119,9 +119,9 @@ void lcd_init(uint8_t dispAttr){
 }
 void lcd_gotoxy(uint8_t x, uint8_t y){
     if( x > (DISPLAY_WIDTH/sizeof(FONT[0])) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    x = x * sizeof(FONT[0]);
     cursorPosition.x=x;
     cursorPosition.y=y;
-    x = x * sizeof(FONT[0]);
 #if defined SSD1306
     uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
 #elif defined SH1106
