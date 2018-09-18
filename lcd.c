@@ -55,6 +55,9 @@ static struct {
 #if defined GRAPHICMODE
 #include <stdlib.h>
 static uint8_t displayBuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
+#elif defined TEXTMODE
+#else
+#error "No valid displaymode! Refer lcd.h"
 #endif
 
 
@@ -210,7 +213,7 @@ void lcd_putc(char c){
                     }
                 }
             }
-            if( (cursorPosition.x > 20) ||
+            if( (cursorPosition.x > DISPLAY_WIDTH-1-sizeof(FONT[0])) ||
                (c == 0xff) ) return;
             // print char at display
 #ifdef GRAPHICMODE
