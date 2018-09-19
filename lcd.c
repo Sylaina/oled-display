@@ -206,9 +206,10 @@ void lcd_putc(char c){
             }
             c -= ' ';
             if (c >= pgm_read_byte(&special_char[0][1]) ) {
+		char temp = c;
                 c = 0xff;
                 for (uint8_t i=0; pgm_read_byte(&special_char[i][1]) != 0xff; i++) {
-                    if ( pgm_read_byte(&special_char[i][0])-' ' == c ) {
+                    if ( pgm_read_byte(&special_char[i][0])-' ' == temp ) {
                         c = pgm_read_byte(&special_char[i][1]);
                     }
                 }
