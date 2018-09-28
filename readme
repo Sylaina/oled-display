@@ -27,8 +27,8 @@ Speed:
 
 Mode        | Time       | I2C-Speed
 ------------+------------+------------
-Oled (TXT)  | 4.191 ms   | 400 kHz
-Oled (TXT)  | 14.616 ms  | 100 kHz
+Oled (TXT)  | 4.411 ms   | 400 kHz
+Oled (TXT)  | 15.384 ms  | 100 kHz
 Oled (GFX)  | 26.603 ms  | 400 kHz
 Oled (GFX)  | 96.294 ms  | 100 kHz
 
