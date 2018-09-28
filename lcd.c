@@ -200,22 +200,21 @@ void lcd_putc(char c){
             lcd_gotoxy(0, cursorPosition.y);
             break;
         default:
+            // char doesn't fit in line
+            if( (cursorPosition.x >= DISPLAY_WIDTH-sizeof(FONT[0])) || (c < ' ') ) break;
             // mapping char
-            if (c < ' ') {
-                break;
-            }
             c -= ' ';
             if (c >= pgm_read_byte(&special_char[0][1]) ) {
-		char temp = c;
+                char temp = c;
                 c = 0xff;
                 for (uint8_t i=0; pgm_read_byte(&special_char[i][1]) != 0xff; i++) {
                     if ( pgm_read_byte(&special_char[i][0])-' ' == temp ) {
                         c = pgm_read_byte(&special_char[i][1]);
+                        break;
                     }
                 }
+                if ( c == 0xff ) break;
             }
-            if( (cursorPosition.x >= DISPLAY_WIDTH-sizeof(FONT[0])) ||
-               (c == 0xff) ) return;
             // print char at display
 #ifdef GRAPHICMODE
             for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
@@ -352,10 +351,13 @@ void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t *picture, uint8_t width,
     }
 }
 void lcd_display() {
+#if defined SSD1306
+    lcd_gotoxy(0,0);
+    lcd_data(&displayBuffer[0][0], DISPLAY_WIDTH*DISPLAY_HEIGHT/8);
+#elif defined SH1106
     for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
         lcd_gotoxy(0,i);
         lcd_data(displayBuffer[i], sizeof(displayBuffer[i]));
     }
-    lcd_home();
-}
+#endif
 #endif
