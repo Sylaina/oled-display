@@ -44,6 +44,10 @@
 #ifndef LCD_H
 #define LCD_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+	
 #if (__GNUC__ * 100 + __GNUC_MINOR__) < 303
 #error "This library requires AVR-GCC 3.3 or later, update to newer AVR-GCC compiler !"
 #endif
@@ -114,5 +118,9 @@ void lcd_drawCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t 
 void lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
 void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t picture[], uint8_t width, uint8_t height, uint8_t color);
 void lcd_display(void);				// copy buffer to display RAM
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 #endif /*  LCD_H  */
