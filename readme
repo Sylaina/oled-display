@@ -19,8 +19,8 @@ Modul       | Flash        | Stat. RAM
 ------------+--------------+------------
 I2C-Core    | 120 Byte     |    0
 FONT        | 644 Byte     |    0
-Oled (TXT)  | 1003 Byte    |    2 Byte
-Oled (GFX)  | 2009 Byte    | 1026 Byte
+Oled (TXT)  | 1303 Byte    |    2 Byte
+Oled (GFX)  | 2293 Byte    | 1026 Byte
 
 Speed (print 20 charaters to display):
 
