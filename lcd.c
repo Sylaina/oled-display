@@ -39,7 +39,7 @@
  *
  *  at GRAPHICMODE lib needs static SRAM for display:
  *  DISPLAY-WIDTH * DISPLAY-HEIGHT + 2 bytes
- *  
+ *
  *  at TEXTMODE lib need static SRAM for display:
  *  2 bytes (cursorPosition)
  */
@@ -49,8 +49,8 @@
 #include <string.h>
 
 static struct {
-	uint8_t x;
-	uint8_t y;
+    uint8_t x;
+    uint8_t y;
 } cursorPosition;
 #if defined GRAPHICMODE
 #include <stdlib.h>
@@ -61,37 +61,37 @@ static uint8_t displayBuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
 #endif
 
 
-const uint8_t init_sequence [] PROGMEM = {	// Initialization Sequence
-LCD_DISP_OFF,	// Display OFF (sleep mode)
-0x20, 0b00,		// Set Memory Addressing Mode
-				// 00=Horizontal Addressing Mode; 01=Vertical Addressing Mode;
-				// 10=Page Addressing Mode (RESET); 11=Invalid
-0xB0,			// Set Page Start Address for Page Addressing Mode, 0-7
-0xC8,			// Set COM Output Scan Direction
-0x00,			// --set low column address
-0x10,			// --set high column address
-0x40,			// --set start line address
-0x81, 0x3F,		// Set contrast control register
-0xA1,			// Set Segment Re-map. A0=address mapped; A1=address 127 mapped.
-0xA6,			// Set display mode. A6=Normal; A7=Inverse
-0xA8, 0x3F,		// Set multiplex ratio(1 to 64)
-0xA4,			// Output RAM to Display
-				// 0xA4=Output follows RAM content; 0xA5,Output ignores RAM content
-0xD3, 0x00,		// Set display offset. 00 = no offset
-0xD5,			// --set display clock divide ratio/oscillator frequency
-0xF0,			// --set divide ratio
-0xD9, 0x22,		// Set pre-charge period
-0xDA, 0x12,		// Set com pins hardware configuration
-0xDB,			// --set vcomh
-0x20,			// 0x20,0.77xVcc
-0x8D, 0x14,		// Set DC-DC enable
-
-
+const uint8_t init_sequence [] PROGMEM = {    // Initialization Sequence
+    LCD_DISP_OFF,    // Display OFF (sleep mode)
+    0x20, 0b00,        // Set Memory Addressing Mode
+    // 00=Horizontal Addressing Mode; 01=Vertical Addressing Mode;
+    // 10=Page Addressing Mode (RESET); 11=Invalid
+    0xB0,            // Set Page Start Address for Page Addressing Mode, 0-7
+    0xC8,            // Set COM Output Scan Direction
+    0x00,            // --set low column address
+    0x10,            // --set high column address
+    0x40,            // --set start line address
+    0x81, 0x3F,        // Set contrast control register
+    0xA1,            // Set Segment Re-map. A0=address mapped; A1=address 127 mapped.
+    0xA6,            // Set display mode. A6=Normal; A7=Inverse
+    0xA8, 0x3F,        // Set multiplex ratio(1 to 64)
+    0xA4,            // Output RAM to Display
+    // 0xA4=Output follows RAM content; 0xA5,Output ignores RAM content
+    0xD3, 0x00,        // Set display offset. 00 = no offset
+    0xD5,            // --set display clock divide ratio/oscillator frequency
+    0xF0,            // --set divide ratio
+    0xD9, 0x22,        // Set pre-charge period
+    0xDA, 0x12,        // Set com pins hardware configuration
+    0xDB,            // --set vcomh
+    0x20,            // 0x20,0.77xVcc
+    0x8D, 0x14,        // Set DC-DC enable
+    
+    
 };
 #pragma mark LCD COMMUNICATION
 void lcd_command(uint8_t cmd[], uint8_t size) {
     i2c_start((LCD_I2C_ADR << 1) | 0);
-    i2c_byte(0x00);	// 0x00 for command, 0x40 for data
+    i2c_byte(0x00);    // 0x00 for command, 0x40 for data
     for (uint8_t i=0; i<size; i++) {
         i2c_byte(cmd[i]);
     }
@@ -99,7 +99,7 @@ void lcd_command(uint8_t cmd[], uint8_t size) {
 }
 void lcd_data(uint8_t data[], uint16_t size) {
     i2c_start((LCD_I2C_ADR << 1) | 0);
-    i2c_byte(0x40);	// 0x00 for command, 0x40 for data
+    i2c_byte(0x40);    // 0x00 for command, 0x40 for data
     for (uint16_t i = 0; i<size; i++) {
         i2c_byte(data[i]);
     }
@@ -132,7 +132,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
 void lcd_clrscr(void){
 #ifdef GRAPHICMODE
     for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
-	memset(displayBuffer[i], 0x00, sizeof(displayBuffer[i]));
+        memset(displayBuffer[i], 0x00, sizeof(displayBuffer[i]));
         lcd_gotoxy(0,i);
         lcd_data(displayBuffer[i], sizeof(displayBuffer[i]));
     }
@@ -217,22 +217,103 @@ void lcd_putc(char c){
             }
             // print char at display
 #ifdef GRAPHICMODE
+    #ifdef BIGCHAR
+            uint16_t doubleChar[sizeof(FONT[0])];
+            uint8_t dChar;
+            
+            for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
+                doubleChar[i] = 0;
+                dChar = pgm_read_byte(&(FONT[(uint8_t)c][i]));
+                for (uint8_t j=0; j<8; j++) {
+                    if ((dChar & (1 << j))) {
+                        doubleChar[i] |= (1 << (j*2));
+                        doubleChar[i] |= (1 << ((j*2)+1));
+                    }
+                }
+            }
+            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+            {
+                // load bit-pattern from flash
+                displayBuffer[cursorPosition.y+1][cursorPosition.x+(2*i)] = doubleChar[i] >> 8;
+                displayBuffer[cursorPosition.y+1][cursorPosition.x+(2*i)+1] = doubleChar[i] >> 8;
+                displayBuffer[cursorPosition.y][cursorPosition.x+(2*i)] = doubleChar[i] & 0xff;
+                displayBuffer[cursorPosition.y][cursorPosition.x+(2*i)+1] = doubleChar[i] & 0xff;
+            }
+    #else
             for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
             {
                 // load bit-pattern from flash
                 displayBuffer[cursorPosition.y][cursorPosition.x+i] =pgm_read_byte(&(FONT[(uint8_t)c][i]));
             }
+    #endif
 #elif defined TEXTMODE
+    #ifdef BIGCHAR
+            uint16_t doubleChar[sizeof(FONT[0])];
+            uint8_t dChar;
+            
+            for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
+                doubleChar[i] = 0;
+                dChar = pgm_read_byte(&(FONT[(uint8_t)c][i]));
+                for (uint8_t j=0; j<8; j++) {
+                    if ((dChar & (1 << j))) {
+                        doubleChar[i] |= (1 << (j*2));
+                        doubleChar[i] |= (1 << ((j*2)+1));
+                    }
+                }
+            }
             i2c_start(LCD_I2C_ADR << 1);
             i2c_byte(0x40);
-            for (uint8_t i = 0; i <  sizeof(FONT[0]); i++)
+            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+            {
+                // print font to ram, print 6 columns
+                i2c_byte(doubleChar[i] & 0xff);
+                i2c_byte(doubleChar[i] & 0xff);
+            }
+            i2c_stop();
+            
+#if defined SSD1306
+            uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
+#elif defined SH1106
+            uint8_t commandSequence[] = {0xb0+cursorPosition.y+1, 0x21, 0x00+((2+cursorPosition.x) & (0x0f)), 0x10+( ((2+cursorPosition.x) & (0xf0)) >> 4 ), 0x7f};
+#endif
+            lcd_command(commandSequence, sizeof(commandSequence));
+            
+            i2c_start(LCD_I2C_ADR << 1);
+            i2c_byte(0x40);
+            for (uint8_t j = 0; j < sizeof(FONT[0]); j++)
+            {
+                // print font to ram, print 6 columns
+                i2c_byte(doubleChar[j] >> 8);
+                i2c_byte(doubleChar[j] >> 8);
+            }
+            i2c_stop();
+            
+            commandSequence[0] = 0xb0+cursorPosition.y;
+#if defined SSD1306
+            commandSequence[2] = cursorPosition.x+(2*sizeof(FONT[0]));
+#elif defined SH1106
+            commandSequence[2] = 0x00+((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0x0f));
+            commandSequence[3] = 0x10+( ((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0xf0)) >> 4 );
+#endif
+            lcd_command(commandSequence, sizeof(commandSequence));
+            
+            
+    #else
+            i2c_start(LCD_I2C_ADR << 1);
+            i2c_byte(0x40);
+            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
             {
                 // print font to ram, print 6 columns
                 i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));
             }
             i2c_stop();
+    #endif
 #endif
+#ifdef BIGCHAR
+            cursorPosition.x += sizeof(FONT[0])*2;
+#else
             cursorPosition.x += sizeof(FONT[0]);
+#endif
             break;
     }
     
@@ -360,5 +441,5 @@ void lcd_display() {
         lcd_data(displayBuffer[i], sizeof(displayBuffer[i]));
     }
 #endif
-#endif
 }
+#endif
