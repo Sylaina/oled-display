@@ -174,17 +174,22 @@ void lcd_set_contrast(uint8_t contrast){
     lcd_command(commandSequence, sizeof(commandSequence));
 }
 void lcd_putc(char c){
+    #ifdef BIGCHAR
+    uint8_t control = 2;
+#else
+    uint8_t control = 1;
+#endif
     switch (c) {
         case '\b':
             // backspace
-            lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+            lcd_gotoxy(cursorPosition.x-control, cursorPosition.y);
             lcd_putc(' ');
-            lcd_gotoxy(cursorPosition.x-1, cursorPosition.y);
+            lcd_gotoxy(cursorPosition.x-control, cursorPosition.y);
             break;
         case '\t':
             // tab
-            if( (cursorPosition.x+4) < (DISPLAY_WIDTH/ sizeof(FONT[0])-4) ){
-                lcd_gotoxy(cursorPosition.x+4, cursorPosition.y);
+            if( (cursorPosition.x+control*4) < (DISPLAY_WIDTH/ sizeof(FONT[0])-control*4) ){
+                lcd_gotoxy(cursorPosition.x+control*4, cursorPosition.y);
             }else{
                 lcd_gotoxy(DISPLAY_WIDTH/ sizeof(FONT[0]), cursorPosition.y);
             }
@@ -192,7 +197,7 @@ void lcd_putc(char c){
         case '\n':
             // linefeed
             if(cursorPosition.y < (DISPLAY_HEIGHT/8-1)){
-                lcd_gotoxy(cursorPosition.x, ++cursorPosition.y);
+                lcd_gotoxy(cursorPosition.x, cursorPosition.y+control);
             }
             break;
         case '\r':
