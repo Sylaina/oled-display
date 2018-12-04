@@ -277,7 +277,7 @@ void lcd_putc(char c){
             i2c_stop();
             
 #if defined SSD1306
-            uint8_t commandSequence[] = {0xb0+cursorPosition.y, 0x21, cursorPosition.x, 0x7f};
+            uint8_t commandSequence[] = {0xb0+cursorPosition.y+1, 0x21, cursorPosition.x, 0x7f};
 #elif defined SH1106
             uint8_t commandSequence[] = {0xb0+cursorPosition.y+1, 0x21, 0x00+((2+cursorPosition.x) & (0x0f)), 0x10+( ((2+cursorPosition.x) & (0xf0)) >> 4 ), 0x7f};
 #endif
