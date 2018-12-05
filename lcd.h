@@ -58,8 +58,7 @@ extern "C" {
     // if you want to use other lib for I2C
     // edit i2c_xxx commands in this library
     // i2c_start(), i2c_byte(), i2c_stop()
-    /* TODO: define charmode for big chars (double heigth, double width)
-//#define BIGCHAR				// uncomment for big chars on display
+    
     /* TODO: define displaycontroller */
 #define SH1106                                 // or SSD1306, check datasheet of your display
     /* TODO: define displaymode */
@@ -81,6 +80,9 @@ extern "C" {
 #ifndef YES
 #define YES        1
 #endif
+
+#define NORMALSIZE 1
+#define DOUBLESIZE 2
     
 #define LCD_DISP_OFF        0xAE
 #define LCD_DISP_ON        0xAF
@@ -110,6 +112,7 @@ extern "C" {
     // y means line (page, refer lcd manual)
     void lcd_putc(char c);                // print character on screen at TEXTMODE
     // at GRAPHICMODE print character to buffer
+    void lcd_charMode(uint8_t mode);            // set size of chars
 #if defined GRAPHICMODE
     void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color);
     void lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
