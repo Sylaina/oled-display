@@ -1,6 +1,8 @@
 # OLED for AVR mikrocontrollers
 Library for oled-displays with SSD1306 or SH1106 display-controller connected with I2C at an AVR Atmel Atmega like Atmega328P.
 
+<img src="https://github.com/Sylaina/oled-display/blob/master/oled.jpg?raw=true" width="500">
+
 This library allows you to display text or/and graphic at oled-display.
 The library need 1591 bytes flash-memory and 2 bytes sram in textmode, in graphicmode library need 2823 bytes flash-memory and 1026 bytes static sram so you can use oled-displays e.g with Atmega48PA (only with textmode).
 Library is only tested with 128x64 Pixel display, lower resolution not tested but should work too.
