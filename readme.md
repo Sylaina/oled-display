@@ -56,12 +56,12 @@ Speed (print 20 charaters to display):
   </tr>
   <tr>
     <td>OLED (Text-Mode)</td>
-    <td>4.411 ms Bytes</td>
+    <td>4.411 ms</td>
     <td>400 kHz</td>
   </tr>
   <tr>
     <td>OLED (Text-Mode)</td>
-    <td>15.384</td>
+    <td>15.384 ms</td>
     <td>100 kHz</td>
   </tr>
   <tr>
