@@ -14,22 +14,65 @@ If you want to use characters like e.g. ä set your compiler input-charset to ut
 Testcondition: Display: SSD1306 OLED, Compiler Optimizelevel: -Os, µC: Atmega328p @ 8 MHz internal RC
 
 Memory:
-
-Modul       | Flash        | Stat. RAM
-------------+--------------+------------
-I2C-Core    | 120 Byte     |    0
-FONT        | 644 Byte     |    0
-Oled (TXT)  | 1475 Byte    |    3 Byte
-Oled (GFX)  | 2473 Byte    | 1027 Byte
+<table>
+  <tr>
+    <th>Modul</th>
+    <th>Flash</th>
+    <th>Static RAM</th>
+  </tr>
+  <tr>
+    <td>I2C-Core</td>
+    <td>120 Bytes</td>
+    <td>0 Bytes</td>
+  </tr>
+  <tr>
+    <td>FONT</td>
+    <td>644 Bytes</td>
+    <td>0 Bytes</td>
+  </tr>
+  <tr>
+    <td>OLED (Text-Mode)</td>
+    <td>1475 Bytes</td>
+    <td>3 Bytes</td>
+  </tr>
+  <tr>
+    <td>OLED (Graphic-Mode)</td>
+    <td>2473 Bytes</td>
+    <td>1027 Bytes</td>
+  </tr>
+ </table>
+  
+  
 
 Speed (print 20 charaters to display):
 
-Mode        | Time       | I2C-Speed
-------------+------------+------------
-Oled (TXT)  | 4.411 ms   | 400 kHz
-Oled (TXT)  | 15.384 ms  | 100 kHz
-Oled (GFX)  | 26.603 ms  | 400 kHz
-Oled (GFX)  | 96.294 ms  | 100 kHz
+<table>
+  <tr>
+    <th>Mode</th>
+    <th>Time</th>
+    <th>I2C-Speed RAM</th>
+  </tr>
+  <tr>
+    <td>OLED (Text-Mode)</td>
+    <td>4.411 ms Bytes</td>
+    <td>400 kHz</td>
+  </tr>
+  <tr>
+    <td>OLED (Text-Mode)</td>
+    <td>15.384</td>
+    <td>100 kHz</td>
+  </tr>
+  <tr>
+    <td>OLED (Graphic-Mode)</td>
+    <td>26.603 ms</td>
+    <td>400 kHz</td>
+  </tr>
+  <tr>
+    <td>OLED (Graphic-Mode)</td>
+    <td>96.294 ms</td>
+    <td>100 kHz</td>
+  </tr>
+ </table>
 
 
 example:
