@@ -52,6 +52,7 @@ static struct {
     uint8_t x;
     uint8_t y;
 } cursorPosition;
+static uint8_t charMode = NORMALSIZE;
 #if defined GRAPHICMODE
 #include <stdlib.h>
 static uint8_t displayBuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
@@ -174,22 +175,17 @@ void lcd_set_contrast(uint8_t contrast){
     lcd_command(commandSequence, sizeof(commandSequence));
 }
 void lcd_putc(char c){
-    #ifdef BIGCHAR
-    uint8_t control = 2;
-#else
-    uint8_t control = 1;
-#endif
     switch (c) {
         case '\b':
             // backspace
-            lcd_gotoxy(cursorPosition.x-control, cursorPosition.y);
+            lcd_gotoxy(cursorPosition.x-charMode, cursorPosition.y);
             lcd_putc(' ');
-            lcd_gotoxy(cursorPosition.x-control, cursorPosition.y);
+            lcd_gotoxy(cursorPosition.x-charMode, cursorPosition.y);
             break;
         case '\t':
             // tab
-            if( (cursorPosition.x+control*4) < (DISPLAY_WIDTH/ sizeof(FONT[0])-control*4) ){
-                lcd_gotoxy(cursorPosition.x+control*4, cursorPosition.y);
+            if( (cursorPosition.x+charMode*4) < (DISPLAY_WIDTH/ sizeof(FONT[0])-charMode*4) ){
+                lcd_gotoxy(cursorPosition.x+charMode*4, cursorPosition.y);
             }else{
                 lcd_gotoxy(DISPLAY_WIDTH/ sizeof(FONT[0]), cursorPosition.y);
             }
@@ -197,7 +193,7 @@ void lcd_putc(char c){
         case '\n':
             // linefeed
             if(cursorPosition.y < (DISPLAY_HEIGHT/8-1)){
-                lcd_gotoxy(cursorPosition.x, cursorPosition.y+control);
+                lcd_gotoxy(cursorPosition.x, cursorPosition.y+charMode);
             }
             break;
         case '\r':
@@ -222,106 +218,113 @@ void lcd_putc(char c){
             }
             // print char at display
 #ifdef GRAPHICMODE
-    #ifdef BIGCHAR
-            uint16_t doubleChar[sizeof(FONT[0])];
-            uint8_t dChar;
-            
-            for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
-                doubleChar[i] = 0;
-                dChar = pgm_read_byte(&(FONT[(uint8_t)c][i]));
-                for (uint8_t j=0; j<8; j++) {
-                    if ((dChar & (1 << j))) {
-                        doubleChar[i] |= (1 << (j*2));
-                        doubleChar[i] |= (1 << ((j*2)+1));
+            if (charMode == DOUBLESIZE) {
+                uint16_t doubleChar[sizeof(FONT[0])];
+                uint8_t dChar;
+                
+                for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
+                    doubleChar[i] = 0;
+                    dChar = pgm_read_byte(&(FONT[(uint8_t)c][i]));
+                    for (uint8_t j=0; j<8; j++) {
+                        if ((dChar & (1 << j))) {
+                            doubleChar[i] |= (1 << (j*2));
+                            doubleChar[i] |= (1 << ((j*2)+1));
+                        }
                     }
                 }
+                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+                {
+                    // load bit-pattern from flash
+                    displayBuffer[cursorPosition.y+1][cursorPosition.x+(2*i)] = doubleChar[i] >> 8;
+                    displayBuffer[cursorPosition.y+1][cursorPosition.x+(2*i)+1] = doubleChar[i] >> 8;
+                    displayBuffer[cursorPosition.y][cursorPosition.x+(2*i)] = doubleChar[i] & 0xff;
+                    displayBuffer[cursorPosition.y][cursorPosition.x+(2*i)+1] = doubleChar[i] & 0xff;
+                }
+                cursorPosition.x += sizeof(FONT[0])*2;
+            } else {
+                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+                {
+                    // load bit-pattern from flash
+                    displayBuffer[cursorPosition.y][cursorPosition.x+i] =pgm_read_byte(&(FONT[(uint8_t)c][i]));
+                }
+                cursorPosition.x += sizeof(FONT[0]);
             }
-            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
-            {
-                // load bit-pattern from flash
-                displayBuffer[cursorPosition.y+1][cursorPosition.x+(2*i)] = doubleChar[i] >> 8;
-                displayBuffer[cursorPosition.y+1][cursorPosition.x+(2*i)+1] = doubleChar[i] >> 8;
-                displayBuffer[cursorPosition.y][cursorPosition.x+(2*i)] = doubleChar[i] & 0xff;
-                displayBuffer[cursorPosition.y][cursorPosition.x+(2*i)+1] = doubleChar[i] & 0xff;
-            }
-    #else
-            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
-            {
-                // load bit-pattern from flash
-                displayBuffer[cursorPosition.y][cursorPosition.x+i] =pgm_read_byte(&(FONT[(uint8_t)c][i]));
-            }
-    #endif
 #elif defined TEXTMODE
-    #ifdef BIGCHAR
-            uint16_t doubleChar[sizeof(FONT[0])];
-            uint8_t dChar;
-            
-            for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
-                doubleChar[i] = 0;
-                dChar = pgm_read_byte(&(FONT[(uint8_t)c][i]));
-                for (uint8_t j=0; j<8; j++) {
-                    if ((dChar & (1 << j))) {
-                        doubleChar[i] |= (1 << (j*2));
-                        doubleChar[i] |= (1 << ((j*2)+1));
+            if (charMode == DOUBLESIZE) {
+                uint16_t doubleChar[sizeof(FONT[0])];
+                uint8_t dChar;
+                
+                for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
+                    doubleChar[i] = 0;
+                    dChar = pgm_read_byte(&(FONT[(uint8_t)c][i]));
+                    for (uint8_t j=0; j<8; j++) {
+                        if ((dChar & (1 << j))) {
+                            doubleChar[i] |= (1 << (j*2));
+                            doubleChar[i] |= (1 << ((j*2)+1));
+                        }
                     }
                 }
-            }
-            i2c_start(LCD_I2C_ADR << 1);
-            i2c_byte(0x40);
-            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
-            {
-                // print font to ram, print 6 columns
-                i2c_byte(doubleChar[i] & 0xff);
-                i2c_byte(doubleChar[i] & 0xff);
-            }
-            i2c_stop();
-            
+                i2c_start(LCD_I2C_ADR << 1);
+                i2c_byte(0x40);
+                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+                {
+                    // print font to ram, print 6 columns
+                    i2c_byte(doubleChar[i] & 0xff);
+                    i2c_byte(doubleChar[i] & 0xff);
+                }
+                i2c_stop();
+                
 #if defined SSD1306
-            uint8_t commandSequence[] = {0xb0+cursorPosition.y+1, 0x21, cursorPosition.x, 0x7f};
+                uint8_t commandSequence[] = {0xb0+cursorPosition.y+1,
+                    0x21,
+                    cursorPosition.x,
+                    0x7f};
 #elif defined SH1106
-            uint8_t commandSequence[] = {0xb0+cursorPosition.y+1, 0x21, 0x00+((2+cursorPosition.x) & (0x0f)), 0x10+( ((2+cursorPosition.x) & (0xf0)) >> 4 ), 0x7f};
+                uint8_t commandSequence[] = {0xb0+cursorPosition.y+1,
+                    0x21,
+                    0x00+((2+cursorPosition.x) & (0x0f)),
+                    0x10+( ((2+cursorPosition.x) & (0xf0)) >> 4 ),
+                    0x7f};
 #endif
-            lcd_command(commandSequence, sizeof(commandSequence));
-            
-            i2c_start(LCD_I2C_ADR << 1);
-            i2c_byte(0x40);
-            for (uint8_t j = 0; j < sizeof(FONT[0]); j++)
-            {
-                // print font to ram, print 6 columns
-                i2c_byte(doubleChar[j] >> 8);
-                i2c_byte(doubleChar[j] >> 8);
-            }
-            i2c_stop();
-            
-            commandSequence[0] = 0xb0+cursorPosition.y;
+                lcd_command(commandSequence, sizeof(commandSequence));
+                
+                i2c_start(LCD_I2C_ADR << 1);
+                i2c_byte(0x40);
+                for (uint8_t j = 0; j < sizeof(FONT[0]); j++)
+                {
+                    // print font to ram, print 6 columns
+                    i2c_byte(doubleChar[j] >> 8);
+                    i2c_byte(doubleChar[j] >> 8);
+                }
+                i2c_stop();
+                
+                commandSequence[0] = 0xb0+cursorPosition.y;
 #if defined SSD1306
-            commandSequence[2] = cursorPosition.x+(2*sizeof(FONT[0]));
+                commandSequence[2] = cursorPosition.x+(2*sizeof(FONT[0]));
 #elif defined SH1106
-            commandSequence[2] = 0x00+((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0x0f));
-            commandSequence[3] = 0x10+( ((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0xf0)) >> 4 );
+                commandSequence[2] = 0x00+((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0x0f));
+                commandSequence[3] = 0x10+( ((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0xf0)) >> 4 );
 #endif
-            lcd_command(commandSequence, sizeof(commandSequence));
-            
-            
-    #else
-            i2c_start(LCD_I2C_ADR << 1);
-            i2c_byte(0x40);
-            for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
-            {
-                // print font to ram, print 6 columns
-                i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));
+                lcd_command(commandSequence, sizeof(commandSequence));
+                cursorPosition.x += sizeof(FONT[0])*2;
+            } else {
+                i2c_start(LCD_I2C_ADR << 1);
+                i2c_byte(0x40);
+                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+                {
+                    // print font to ram, print 6 columns
+                    i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));
+                }
+                i2c_stop();
+                cursorPosition.x += sizeof(FONT[0]);
             }
-            i2c_stop();
-    #endif
-#endif
-#ifdef BIGCHAR
-            cursorPosition.x += sizeof(FONT[0])*2;
-#else
-            cursorPosition.x += sizeof(FONT[0]);
 #endif
             break;
     }
     
+}
+void lcd_charMode(uint8_t mode){
+    charMode = mode;
 }
 void lcd_puts(const char* s){
     while (*s) {
