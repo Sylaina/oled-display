@@ -34,6 +34,7 @@ Oled (GFX)  | 96.294 ms  | 100 kHz
 
 example:
 
+```c
 //****main.c****//
 #include "lcd.h"
 
@@ -53,9 +54,9 @@ int main(void){
   }
   return 0;
 }
-
+```
 example for chars with double height:
-
+```c
 //****main.c****//
 #include "lcd.h"
 
