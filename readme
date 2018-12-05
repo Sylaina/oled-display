@@ -19,12 +19,10 @@ Modul       | Flash        | Stat. RAM
 ------------+--------------+------------
 I2C-Core    | 120 Byte     |    0
 FONT        | 644 Byte     |    0
-Oled (TXT)  | 1303 Byte    |    2 Byte
-Oled (GFX)  | 2293 Byte    | 1026 Byte
+Oled (TXT)  | 1475 Byte    |    3 Byte
+Oled (GFX)  | 2473 Byte    | 1027 Byte
 
 Speed (print 20 charaters to display):
-
-
 
 Mode        | Time       | I2C-Speed
 ------------+------------+------------
@@ -54,4 +52,30 @@ int main(void){
     //main loop
   }
   return 0;
+}
+
+example for chars with double height:
+
+//****main.c****//
+#include "lcd.h"
+
+int main(void){
+    
+    lcd_init(LCD_DISP_ON);
+    lcd_clrscr();
+    lcd_set_contrast(0x00);
+    
+    for(;;){
+        lcd_gotoxy(4,1);
+        lcd_puts("Normal Size");
+        lcd_charMode(DOUBLESIZE);
+        lcd_gotoxy(0,4);
+        lcd_puts("  Double  \r\n   Size");
+        lcd_charMode(NORMALSIZE);
+        
+#ifdef GRAPHICMODE
+        lcd_display();
+#endif
+    }
+    return 0;
 }
