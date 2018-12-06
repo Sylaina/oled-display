@@ -4,7 +4,7 @@ Library for oled-displays with SSD1306 or SH1106 display-controller connected wi
 <img src="https://github.com/Sylaina/oled-display/blob/master/oled.jpg?raw=true" width="500">
 
 This library allows you to display text or/and graphic at oled-display.
-The library need 1591 bytes flash-memory and 2 bytes sram in textmode, in graphicmode library need 2823 bytes flash-memory and 1026 bytes static sram so you can use oled-displays e.g with Atmega48PA (only with textmode).
+The library need less than 2 kilobytes flash-memory and 3 bytes sram in textmode, in graphicmode library need less than 3 kilobytes flash-memory and 1027 bytes static sram so you can use oled-displays e.g with Atmega48PA (only with textmode).
 Library is only tested with 128x64 Pixel display, lower resolution not tested but should work too.
 
 If you want to use your own I2C library you have to fit i2c-function at lcd-library.
