@@ -46,7 +46,7 @@ Memory:
   
   
 
-Speed (print 20 charaters to display):
+Speed (print 20 charaters (1 line) in normal size to display):
 
 <table>
   <tr>
