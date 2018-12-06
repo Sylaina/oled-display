@@ -9,6 +9,10 @@
 #ifndef i2c_h
 #define i2c_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+	
 /* TODO: setup i2c/twi */
 #define F_I2C			100000UL// clock i2c
 #define PSC_I2C			1		// prescaler i2c
@@ -35,4 +39,8 @@ void i2c_byte(uint8_t byte);		// send data_byte
 uint8_t i2c_readAck(void);          // read byte with ACK
 uint8_t i2c_readNAck(void);         // read byte with NACK
 
+#ifdef __cplusplus
+}
+#endif
+	
 #endif /* i2c_h */
