@@ -436,7 +436,7 @@ void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t *picture, uint8_t width,
             if(pgm_read_byte(picture + j * byteWidth + i / 8) & (128 >> (i & 7))){
                 lcd_drawPixel(x+i, y+j, color);
             } else {
-                lcd_drawPixel(x+i, y+j, color);
+                lcd_drawPixel(x+i, y+j, !color);
             }
         }
     }
