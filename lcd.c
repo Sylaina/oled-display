@@ -130,6 +130,17 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
 #endif
     lcd_command(commandSequence, sizeof(commandSequence));
 }
+void lcd_goto_xpix_y(uint8_t x, uint8_t y){
+    if( x > (DISPLAY_WIDTH) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
+    cursorPosition.x=x;
+    cursorPosition.y=y;
+#if defined SSD1306
+    uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
+#elif defined SH1106
+    uint8_t commandSequence[] = {0xb0+y, 0x21, 0x00+((2+x) & (0x0f)), 0x10+( ((2+x) & (0xf0)) >> 4 ), 0x7f};
+#endif
+    lcd_command(commandSequence, sizeof(commandSequence));
+}
 void lcd_clrscr(void){
 #ifdef GRAPHICMODE
     for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
@@ -451,5 +462,19 @@ void lcd_display() {
         lcd_data(displayBuffer[i], sizeof(displayBuffer[i]));
     }
 #endif
+}
+void lcd_clear_buffer() {
+    for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
+        memset(displayBuffer[i], 0x00, sizeof(displayBuffer[i]));
+    }
+}
+uint8_t lcd_check_buffer(uint8_t x, uint8_t y) {
+    if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return 0; // out of Display
+    return displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] & (1 << (y % (DISPLAY_HEIGHT/8)));
+}
+void lcd_display_block(uint8_t x, uint8_t line, uint8_t width) {
+    if ( x+width > (DISPLAY_WIDTH) || line > (DISPLAY_HEIGHT/8-1)) return;
+    lcd_goto_xpix_y(x,line);
+    lcd_data(&displayBuffer[line][x], width);
 }
 #endif
