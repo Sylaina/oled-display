@@ -125,7 +125,7 @@ extern "C" {
     void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t picture[], uint8_t width, uint8_t height, uint8_t color);
     void lcd_display(void);                // copy buffer to display RAM
     void lcd_clear_buffer(void); // clear display buffer
-    uint8_t lcd_check_buffer(uint8_t x, uint8_t y);
+    uint8_t lcd_check_buffer(uint8_t x, uint8_t y); // read a pixel value from the display buffer
     void lcd_display_block(uint8_t x, uint8_t line, uint8_t width); // display (part of) a display line
 #endif
     
