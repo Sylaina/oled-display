@@ -125,4 +125,6 @@ int main(void){
     }   
     return 0;
 }
+```
+
 <img src="https://github.com/Sylaina/oled-display/blob/master/bigchars.JPG?raw=true" width="500">
