@@ -34,12 +34,12 @@ Memory:
   </tr>
   <tr>
     <td>OLED (Text-Mode)</td>
-    <td>1425 Bytes</td>
+    <td>1449 Bytes</td>
     <td>3 Bytes</td>
   </tr>
   <tr>
     <td>OLED (Graphic-Mode)</td>
-    <td>2379 Bytes</td>
+    <td>2403 Bytes</td>
     <td>1027 Bytes</td>
   </tr>
  </table>
