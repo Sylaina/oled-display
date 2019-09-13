@@ -339,9 +339,9 @@ void lcd_puts_p(const char* progmem_s){
 void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color){
     if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return; // out of Display
     if( color == WHITE){
-        displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] |= (1 << (y % (DISPLAY_HEIGHT/8)));
+        displayBuffer[(y / 8)][x] |= (1 << (y % 8));
     } else {
-        displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] &= ~(1 << (y % (DISPLAY_HEIGHT/8)));
+        displayBuffer[(y / 8)][x] &= ~(1 << (y % 8));
     }
 }
 void lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color){
