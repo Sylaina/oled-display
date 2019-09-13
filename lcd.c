@@ -264,15 +264,14 @@ void lcd_putc(char c){
                         }
                     }
                 }
-                i2c_start(LCD_I2C_ADR << 1);
-                i2c_byte(0x40);
+                uint8_t data[sizeof(FONT[0])*2];
                 for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // print font to ram, print 6 columns
-                    i2c_byte(doubleChar[i] & 0xff);
-                    i2c_byte(doubleChar[i] & 0xff);
+                    data[i<<1]=(doubleChar[i] & 0xff);
+                    data[(i<<1)+1]=(doubleChar[i] & 0xff);
                 }
-                i2c_stop();
+                lcd_data(data, sizeof(FONT[0])*2);
                 
 #if defined SSD1306
                 uint8_t commandSequence[] = {0xb0+cursorPosition.y+1,
@@ -288,15 +287,13 @@ void lcd_putc(char c){
 #endif
                 lcd_command(commandSequence, sizeof(commandSequence));
                 
-                i2c_start(LCD_I2C_ADR << 1);
-                i2c_byte(0x40);
-                for (uint8_t j = 0; j < sizeof(FONT[0]); j++)
+                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // print font to ram, print 6 columns
-                    i2c_byte(doubleChar[j] >> 8);
-                    i2c_byte(doubleChar[j] >> 8);
+                    data[i<<1]=(doubleChar[i] >> 8);
+                    data[(i<<1)+1]=(doubleChar[i] >> 8);
                 }
-                i2c_stop();
+                lcd_data(data, sizeof(FONT[0])*2);
                 
                 commandSequence[0] = 0xb0+cursorPosition.y;
 #if defined SSD1306
@@ -308,14 +305,13 @@ void lcd_putc(char c){
                 lcd_command(commandSequence, sizeof(commandSequence));
                 cursorPosition.x += sizeof(FONT[0])*2;
             } else {
-                i2c_start(LCD_I2C_ADR << 1);
-                i2c_byte(0x40);
-                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+                uint8_t data[sizeof(FONT[0])];
+            	for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // print font to ram, print 6 columns
-                    i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));
+                    data[i]=(pgm_read_byte(&(FONT[(uint8_t)c][i])));
                 }
-                i2c_stop();
+                lcd_data(data, sizeof(FONT[0]));
                 cursorPosition.x += sizeof(FONT[0]);
             }
 #endif
