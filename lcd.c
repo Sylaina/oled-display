@@ -64,7 +64,7 @@ static uint8_t displayBuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
 
 const uint8_t init_sequence [] PROGMEM = {    // Initialization Sequence
     LCD_DISP_OFF,    // Display OFF (sleep mode)
-    0x20, 0b00,        // Set Memory Addressing Mode
+    0x20, 0b00,      // Set Memory Addressing Mode
     // 00=Horizontal Addressing Mode; 01=Vertical Addressing Mode;
     // 10=Page Addressing Mode (RESET); 11=Invalid
     0xB0,            // Set Page Start Address for Page Addressing Mode, 0-7
@@ -72,20 +72,20 @@ const uint8_t init_sequence [] PROGMEM = {    // Initialization Sequence
     0x00,            // --set low column address
     0x10,            // --set high column address
     0x40,            // --set start line address
-    0x81, 0x3F,        // Set contrast control register
+    0x81, 0x3F,      // Set contrast control register
     0xA1,            // Set Segment Re-map. A0=address mapped; A1=address 127 mapped.
     0xA6,            // Set display mode. A6=Normal; A7=Inverse
-    0xA8, 0x3F,        // Set multiplex ratio(1 to 64)
+    0xA8, DISPLAY_HEIGHT-1, // Set multiplex ratio(1 to 64)
     0xA4,            // Output RAM to Display
-    // 0xA4=Output follows RAM content; 0xA5,Output ignores RAM content
-    0xD3, 0x00,        // Set display offset. 00 = no offset
+					 // 0xA4=Output follows RAM content; 0xA5,Output ignores RAM content
+    0xD3, 0x00,      // Set display offset. 00 = no offset
     0xD5,            // --set display clock divide ratio/oscillator frequency
     0xF0,            // --set divide ratio
-    0xD9, 0x22,        // Set pre-charge period
-    0xDA, 0x12,        // Set com pins hardware configuration
+    0xD9, 0x22,      // Set pre-charge period
+    0xDA, 0x12,      // Set com pins hardware configuration
     0xDB,            // --set vcomh
     0x20,            // 0x20,0.77xVcc
-    0x8D, 0x14,        // Set DC-DC enable
+    0x8D, 0x14,      // Set DC-DC enable
     
     
 };
