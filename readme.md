@@ -24,7 +24,7 @@ Memory:
   </tr>
   <tr>
     <td>I2C-Core</td>
-    <td>120 Bytes</td>
+    <td>234 Bytes</td>
     <td>0 Bytes</td>
   </tr>
   <tr>
@@ -34,12 +34,12 @@ Memory:
   </tr>
   <tr>
     <td>OLED (Text-Mode)</td>
-    <td>1475 Bytes</td>
+    <td>1425 Bytes</td>
     <td>3 Bytes</td>
   </tr>
   <tr>
     <td>OLED (Graphic-Mode)</td>
-    <td>2473 Bytes</td>
+    <td>2379 Bytes</td>
     <td>1027 Bytes</td>
   </tr>
  </table>
