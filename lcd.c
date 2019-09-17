@@ -64,7 +64,7 @@ static uint8_t displayBuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
 
 const uint8_t init_sequence [] PROGMEM = {    // Initialization Sequence
     LCD_DISP_OFF,    // Display OFF (sleep mode)
-    0x20, 0b00,        // Set Memory Addressing Mode
+    0x20, 0b00,      // Set Memory Addressing Mode
     // 00=Horizontal Addressing Mode; 01=Vertical Addressing Mode;
     // 10=Page Addressing Mode (RESET); 11=Invalid
     0xB0,            // Set Page Start Address for Page Addressing Mode, 0-7
@@ -72,20 +72,20 @@ const uint8_t init_sequence [] PROGMEM = {    // Initialization Sequence
     0x00,            // --set low column address
     0x10,            // --set high column address
     0x40,            // --set start line address
-    0x81, 0x3F,        // Set contrast control register
+    0x81, 0x3F,      // Set contrast control register
     0xA1,            // Set Segment Re-map. A0=address mapped; A1=address 127 mapped.
     0xA6,            // Set display mode. A6=Normal; A7=Inverse
-    0xA8, 0x3F,        // Set multiplex ratio(1 to 64)
+    0xA8, DISPLAY_HEIGHT-1, // Set multiplex ratio(1 to 64)
     0xA4,            // Output RAM to Display
-    // 0xA4=Output follows RAM content; 0xA5,Output ignores RAM content
-    0xD3, 0x00,        // Set display offset. 00 = no offset
+					 // 0xA4=Output follows RAM content; 0xA5,Output ignores RAM content
+    0xD3, 0x00,      // Set display offset. 00 = no offset
     0xD5,            // --set display clock divide ratio/oscillator frequency
     0xF0,            // --set divide ratio
-    0xD9, 0x22,        // Set pre-charge period
-    0xDA, 0x12,        // Set com pins hardware configuration
+    0xD9, 0x22,      // Set pre-charge period
+    0xDA, 0x12,      // Set com pins hardware configuration
     0xDB,            // --set vcomh
     0x20,            // 0x20,0.77xVcc
-    0x8D, 0x14,        // Set DC-DC enable
+    0x8D, 0x14,      // Set DC-DC enable
     
     
 };
@@ -264,15 +264,14 @@ void lcd_putc(char c){
                         }
                     }
                 }
-                i2c_start(LCD_I2C_ADR << 1);
-                i2c_byte(0x40);
+                uint8_t data[sizeof(FONT[0])*2];
                 for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // print font to ram, print 6 columns
-                    i2c_byte(doubleChar[i] & 0xff);
-                    i2c_byte(doubleChar[i] & 0xff);
+                    data[i<<1]=(doubleChar[i] & 0xff);
+                    data[(i<<1)+1]=(doubleChar[i] & 0xff);
                 }
-                i2c_stop();
+                lcd_data(data, sizeof(FONT[0])*2);
                 
 #if defined SSD1306
                 uint8_t commandSequence[] = {0xb0+cursorPosition.y+1,
@@ -288,15 +287,13 @@ void lcd_putc(char c){
 #endif
                 lcd_command(commandSequence, sizeof(commandSequence));
                 
-                i2c_start(LCD_I2C_ADR << 1);
-                i2c_byte(0x40);
-                for (uint8_t j = 0; j < sizeof(FONT[0]); j++)
+                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // print font to ram, print 6 columns
-                    i2c_byte(doubleChar[j] >> 8);
-                    i2c_byte(doubleChar[j] >> 8);
+                    data[i<<1]=(doubleChar[i] >> 8);
+                    data[(i<<1)+1]=(doubleChar[i] >> 8);
                 }
-                i2c_stop();
+                lcd_data(data, sizeof(FONT[0])*2);
                 
                 commandSequence[0] = 0xb0+cursorPosition.y;
 #if defined SSD1306
@@ -308,14 +305,13 @@ void lcd_putc(char c){
                 lcd_command(commandSequence, sizeof(commandSequence));
                 cursorPosition.x += sizeof(FONT[0])*2;
             } else {
-                i2c_start(LCD_I2C_ADR << 1);
-                i2c_byte(0x40);
-                for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
+                uint8_t data[sizeof(FONT[0])];
+            	for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // print font to ram, print 6 columns
-                    i2c_byte(pgm_read_byte(&(FONT[(uint8_t)c][i])));
+                    data[i]=(pgm_read_byte(&(FONT[(uint8_t)c][i])));
                 }
-                i2c_stop();
+                lcd_data(data, sizeof(FONT[0]));
                 cursorPosition.x += sizeof(FONT[0]);
             }
 #endif
@@ -343,9 +339,9 @@ void lcd_puts_p(const char* progmem_s){
 void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color){
     if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return; // out of Display
     if( color == WHITE){
-        displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] |= (1 << (y % (DISPLAY_HEIGHT/8)));
+        displayBuffer[(y / 8)][x] |= (1 << (y % 8));
     } else {
-        displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] &= ~(1 << (y % (DISPLAY_HEIGHT/8)));
+        displayBuffer[(y / 8)][x] &= ~(1 << (y % 8));
     }
 }
 void lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color){
