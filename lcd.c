@@ -1,11 +1,11 @@
 /*
- * This file is part of lcd library for ssd1306/sh1106 oled-display.
+ * This file is part of lcd library for ssd1306/ssd1309/sh1106 oled-display.
  *
- * lcd library for ssd1306/sh1106 oled-display is free software: you can redistribute it and/or modify
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
  *
- * lcd library for ssd1306/sh1106 oled-display is distributed in the hope that it will be useful,
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -13,14 +13,14 @@
  * You should have received a copy of the GNU General Public License
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Diese Datei ist Teil von lcd library for ssd1306/sh1106 oled-display.
+ * Diese Datei ist Teil von lcd library for ssd1306/ssd1309/sh1106 oled-display.
  *
- * lcd library for ssd1306/sh1106 oled-display ist Freie Software: Sie können es unter den Bedingungen
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display ist Freie Software: Sie können es unter den Bedingungen
  * der GNU General Public License, wie von der Free Software Foundation,
  * Version 3 der Lizenz oder jeder späteren
  * veröffentlichten Version, weiterverbreiten und/oder modifizieren.
  *
- * lcd library for ssd1306/sh1106 oled-display wird in der Hoffnung, dass es nützlich sein wird, aber
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display wird in der Hoffnung, dass es nützlich sein wird, aber
  * OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
  * Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
  * Siehe die GNU General Public License für weitere Details.
@@ -33,7 +33,7 @@
  *  Created by Michael Köhler on 22.12.16.
  *  Copyright 2016 Skie-Systems. All rights reserved.
  *
- *  lib for OLED-Display with ssd1306/sh1106-Controller
+ *  lib for OLED-Display with ssd1306/ssd1309/sh1106-Controller
  *  first dev-version only for I2C-Connection
  *  at ATMega328P like Arduino Uno
  *
@@ -48,10 +48,15 @@
 #include "font.h"
 #include <string.h>
 
+#if defined SPI
+#include <util/delay.h>
+#endif
+
 static struct {
     uint8_t x;
     uint8_t y;
 } cursorPosition;
+
 static uint8_t charMode = NORMALSIZE;
 #if defined GRAPHICMODE
 #include <stdlib.h>
@@ -91,25 +96,56 @@ const uint8_t init_sequence [] PROGMEM = {    // Initialization Sequence
 };
 #pragma mark LCD COMMUNICATION
 void lcd_command(uint8_t cmd[], uint8_t size) {
+#if defined I2C
     i2c_start((LCD_I2C_ADR << 1) | 0);
     i2c_byte(0x00);    // 0x00 for command, 0x40 for data
     for (uint8_t i=0; i<size; i++) {
         i2c_byte(cmd[i]);
     }
     i2c_stop();
+#elif defined SPI
+	LCD_PORT &= ~(1 << CS_PIN);
+	LCD_PORT &= ~(1 << DC_PIN);
+	for (uint8_t i=0; i<size; i++) {
+        SPDR = cmd[i];
+        while(!(SPSR & (1<<SPIF)));
+    }
+    LCD_PORT |= (1 << CS_PIN);
+#endif
 }
 void lcd_data(uint8_t data[], uint16_t size) {
+#if defined I2C
     i2c_start((LCD_I2C_ADR << 1) | 0);
     i2c_byte(0x40);    // 0x00 for command, 0x40 for data
     for (uint16_t i = 0; i<size; i++) {
         i2c_byte(data[i]);
     }
     i2c_stop();
+#elif defined SPI
+	LCD_PORT &= ~(1 << CS_PIN);
+	LCD_PORT |= (1 << DC_PIN);
+	for (uint16_t i = 0; i<size; i++) {
+        SPDR = data[i];
+        while(!(SPSR & (1<<SPIF)));
+    }
+    LCD_PORT |= (1 << CS_PIN);
+#endif
 }
 #pragma mark -
 #pragma mark GENERAL FUNCTIONS
 void lcd_init(uint8_t dispAttr){
+#if defined I2C
     i2c_init();
+#elif defined SPI
+	DDRB |= (1 << PB2)|(1 << PB3)|(1 << PB5);
+    SPCR = (1 << SPE)|(1<<MSTR)|(1<<SPR0);
+    LCD_DDR |= (1 << CS_PIN)|(1 << DC_PIN)|(1 << RES_PIN);
+    LCD_PORT |= (1 << CS_PIN)|(1 << DC_PIN)|(1 << RES_PIN);
+    LCD_PORT &= ~(1 << RES_PIN);
+    _delay_ms(10);
+    LCD_PORT |= (1 << RES_PIN);
+#endif
+
     uint8_t commandSequence[sizeof(init_sequence)+1];
     for (uint8_t i = 0; i < sizeof (init_sequence); i++) {
         commandSequence[i] = (pgm_read_byte(&init_sequence[i]));
@@ -123,7 +159,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
     x = x * sizeof(FONT[0]);
     cursorPosition.x=x;
     cursorPosition.y=y;
-#if defined SSD1306
+#if defined (SSD1306) || (SSD1309)
     uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
 #elif defined SH1106
     uint8_t commandSequence[] = {0xb0+y, 0x21, 0x00+((2+x) & (0x0f)), 0x10+( ((2+x) & (0xf0)) >> 4 ), 0x7f};
@@ -151,7 +187,6 @@ void lcd_home(void){
     lcd_gotoxy(0, 0);
 }
 void lcd_invert(uint8_t invert){
-    i2c_start((LCD_I2C_ADR << 1) | 0);
     uint8_t commandSequence[1];
     if (invert != YES) {
         commandSequence[0] = 0xA6;
@@ -161,7 +196,6 @@ void lcd_invert(uint8_t invert){
     lcd_command(commandSequence, 1);
 }
 void lcd_sleep(uint8_t sleep){
-    i2c_start((LCD_I2C_ADR << 1) | 0);
     uint8_t commandSequence[1];
     if (sleep != YES) {
         commandSequence[0] = 0xAF;
@@ -221,6 +255,7 @@ void lcd_putc(char c){
             if (charMode == DOUBLESIZE) {
                 uint16_t doubleChar[sizeof(FONT[0])];
                 uint8_t dChar;
+                if ((cursorPosition.x+2*sizeof(FONT[0]))>DISPLAY_WIDTH) break;
                 
                 for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
                     doubleChar[i] = 0;
@@ -242,6 +277,8 @@ void lcd_putc(char c){
                 }
                 cursorPosition.x += sizeof(FONT[0])*2;
             } else {
+            	if ((cursorPosition.x+sizeof(FONT[0]))>DISPLAY_WIDTH) break;
+            	
                 for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // load bit-pattern from flash
@@ -253,6 +290,7 @@ void lcd_putc(char c){
             if (charMode == DOUBLESIZE) {
                 uint16_t doubleChar[sizeof(FONT[0])];
                 uint8_t dChar;
+                if ((cursorPosition.x+2*sizeof(FONT[0]))>DISPLAY_WIDTH) break;
                 
                 for (uint8_t i=0; i < sizeof(FONT[0]); i++) {
                     doubleChar[i] = 0;
@@ -273,7 +311,7 @@ void lcd_putc(char c){
                 }
                 lcd_data(data, sizeof(FONT[0])*2);
                 
-#if defined SSD1306
+#if defined (SSD1306) || (SSD1309)
                 uint8_t commandSequence[] = {0xb0+cursorPosition.y+1,
                     0x21,
                     cursorPosition.x,
@@ -296,7 +334,7 @@ void lcd_putc(char c){
                 lcd_data(data, sizeof(FONT[0])*2);
                 
                 commandSequence[0] = 0xb0+cursorPosition.y;
-#if defined SSD1306
+#if defined (SSD1306) || (SSD1309)
                 commandSequence[2] = cursorPosition.x+(2*sizeof(FONT[0]));
 #elif defined SH1106
                 commandSequence[2] = 0x00+((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0x0f));
@@ -306,6 +344,8 @@ void lcd_putc(char c){
                 cursorPosition.x += sizeof(FONT[0])*2;
             } else {
                 uint8_t data[sizeof(FONT[0])];
+                if ((cursorPosition.x+sizeof(FONT[0]))>DISPLAY_WIDTH) break;
+                
             	for (uint8_t i = 0; i < sizeof(FONT[0]); i++)
                 {
                     // print font to ram, print 6 columns
@@ -438,7 +478,7 @@ void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t *picture, uint8_t width,
     }
 }
 void lcd_display() {
-#if defined SSD1306
+#if defined (SSD1306) || (SSD1309)
     lcd_gotoxy(0,0);
     lcd_data(&displayBuffer[0][0], DISPLAY_WIDTH*DISPLAY_HEIGHT/8);
 #elif defined SH1106
