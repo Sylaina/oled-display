@@ -159,7 +159,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y){
     x = x * sizeof(FONT[0]);
     cursorPosition.x=x;
     cursorPosition.y=y;
-#if defined (SSD1306) || (SSD1309)
+#if defined (SSD1306) || defined (SSD1309)
     uint8_t commandSequence[] = {0xb0+y, 0x21, x, 0x7f};
 #elif defined SH1106
     uint8_t commandSequence[] = {0xb0+y, 0x21, 0x00+((2+x) & (0x0f)), 0x10+( ((2+x) & (0xf0)) >> 4 ), 0x7f};
@@ -311,7 +311,7 @@ void lcd_putc(char c){
                 }
                 lcd_data(data, sizeof(FONT[0])*2);
                 
-#if defined (SSD1306) || (SSD1309)
+#if defined (SSD1306) || defined (SSD1309)
                 uint8_t commandSequence[] = {0xb0+cursorPosition.y+1,
                     0x21,
                     cursorPosition.x,
@@ -334,7 +334,7 @@ void lcd_putc(char c){
                 lcd_data(data, sizeof(FONT[0])*2);
                 
                 commandSequence[0] = 0xb0+cursorPosition.y;
-#if defined (SSD1306) || (SSD1309)
+#if defined (SSD1306) || defined (SSD1309)
                 commandSequence[2] = cursorPosition.x+(2*sizeof(FONT[0]));
 #elif defined SH1106
                 commandSequence[2] = 0x00+((2+cursorPosition.x+(2*sizeof(FONT[0]))) & (0x0f));
@@ -478,7 +478,7 @@ void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t *picture, uint8_t width,
     }
 }
 void lcd_display() {
-#if defined (SSD1306) || (SSD1309)
+#if defined (SSD1306) || defined (SSD1309)
     lcd_gotoxy(0,0);
     lcd_data(&displayBuffer[0][0], DISPLAY_WIDTH*DISPLAY_HEIGHT/8);
 #elif defined SH1106
