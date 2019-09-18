@@ -1,5 +1,5 @@
 # OLED for AVR mikrocontrollers
-Library for oled-displays with SSD1306 or SH1106 display-controller connected with I2C at an AVR Atmel Atmega like Atmega328P.
+Library for oled-displays with SSD1306, SSD1309 or SH1106 display-controller connected with I2C or SPI at an AVR Atmel Atmega like Atmega328P.
 
 <img src="https://github.com/Sylaina/oled-display/blob/master/oled.jpg?raw=true" width="500">
 
