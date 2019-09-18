@@ -1,11 +1,11 @@
 /*
- * This file is part of lcd library for ssd1306/sh1106 oled-display.
+ * This file is part of lcd library for ssd1306/ssd1309/sh1106 oled-display.
  *
- * lcd library for ssd1306/sh1106 oled-display is free software: you can redistribute it and/or modify
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
  *
- * lcd library for ssd1306/sh1106 oled-display is distributed in the hope that it will be useful,
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -13,14 +13,14 @@
  * You should have received a copy of the GNU General Public License
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Diese Datei ist Teil von lcd library for ssd1306/sh1106 oled-display.
+ * Diese Datei ist Teil von lcd library for ssd1306/ssd1309/sh1106 oled-display.
  *
- * lcd library for ssd1306/sh1106 oled-display ist Freie Software: Sie können es unter den Bedingungen
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display ist Freie Software: Sie können es unter den Bedingungen
  * der GNU General Public License, wie von der Free Software Foundation,
  * Version 3 der Lizenz oder jeder späteren
  * veröffentlichten Version, weiterverbreiten und/oder modifizieren.
  *
- * lcd library for ssd1306/sh1106 oled-display wird in der Hoffnung, dass es nützlich sein wird, aber
+ * lcd library for ssd1306/ssd1309/sh1106 oled-display wird in der Hoffnung, dass es nützlich sein wird, aber
  * OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
  * Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
  * Siehe die GNU General Public License für weitere Details.
@@ -33,7 +33,7 @@
  *  Created by Michael Köhler on 22.12.16.
  *  Copyright 2016 Skie-Systems. All rights reserved.
  *
- *  lib for OLED-Display with ssd1306/sh1106-Controller
+ *  lib for OLED-Display with ssd1306/ssd1309/sh1106-Controller
  *  first dev-version only for I2C-Connection
  *  at ATMega328P like Arduino Uno
  *
@@ -54,13 +54,11 @@ extern "C" {
     
 #include <inttypes.h>
 #include <avr/pgmspace.h>
-#include "i2c.h"                                // library for I2C-communication
-    // if you want to use other lib for I2C
-    // edit i2c_xxx commands in this library
-    // i2c_start(), i2c_byte(), i2c_stop()
-    
+
+	/* TODO: define bus */
+#define I2C			// I2C or SPI	
     /* TODO: define displaycontroller */
-#define SH1106                                 // or SSD1306, check datasheet of your display
+#define SH1106                 // or SSD1306, check datasheet of your display
     /* TODO: define displaymode */
 #define TEXTMODE                // TEXTMODE for only text to display,
     // GRAPHICMODE for text and graphic
@@ -75,8 +73,24 @@ extern "C" {
     // r/w-bit are set/unset by library
     // e.g. 8 bit slave-adress:
     // 0x78 = adress 0x3C with cleared r/w-bit (write-mode)
+
     
+#ifdef I2C
+#include "i2c.h"	// library for I2C-communication
+    // if you want to use other lib for I2C
+    // edit i2c_xxx commands in this library
+    // i2c_start(), i2c_byte(), i2c_stop()
     
+#elif defined SPI
+	// if you want to use your other lib/function for SPI replace SPI-commands
+#define LCD_PORT	PORTB
+#define LCD_DDR		DDRB
+#define RES_PIN		PB0
+#define DC_PIN		PB1
+#define CS_PIN		PB2
+
+#endif
+
 #ifndef YES
 #define YES        1
 #endif
