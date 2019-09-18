@@ -42,7 +42,7 @@ MCU = atmega328p
 
 # Main Oscillator Frequency
 # This is only used to define F_CPU in all assembler and c-sources.
-F_CPU = 14745600UL
+F_CPU = 16000000UL
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex
@@ -52,7 +52,7 @@ TARGET = main
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c i2c.c lcd.c font.c
+SRC = $(wildcard *.c)
 
 # List Assembler source files here.
 # Make them always end in a capital .S.  Files ending in a lowercase .s
@@ -207,7 +207,7 @@ AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
-AVRDUDE_FLAGS += -B 1
+AVRDUDE_FLAGS += -b 19200
 
 
 
