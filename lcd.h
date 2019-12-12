@@ -124,6 +124,8 @@ extern "C" {
     void lcd_clrscr(void);                // clear screen (and buffer at GRFAICMODE)
     void lcd_gotoxy(uint8_t x, uint8_t y);        // set curser at pos x, y. x means character,
     // y means line (page, refer lcd manual)
+    void lcd_goto_xpix_y(uint8_t x, uint8_t y); // set curser at pos x, y. x means pixel,
+    // y means line (page, refer lcd manual)
     void lcd_putc(char c);                // print character on screen at TEXTMODE
     // at GRAPHICMODE print character to buffer
     void lcd_charMode(uint8_t mode);            // set size of chars
@@ -136,6 +138,9 @@ extern "C" {
     void lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
     void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t picture[], uint8_t width, uint8_t height, uint8_t color);
     void lcd_display(void);                // copy buffer to display RAM
+    void lcd_clear_buffer(void); // clear display buffer
+    uint8_t lcd_check_buffer(uint8_t x, uint8_t y); // read a pixel value from the display buffer
+    void lcd_display_block(uint8_t x, uint8_t line, uint8_t width); // display (part of) a display line
 #endif
     
 #ifdef __cplusplus

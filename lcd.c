@@ -155,8 +155,11 @@ void lcd_init(uint8_t dispAttr){
     lcd_clrscr();
 }
 void lcd_gotoxy(uint8_t x, uint8_t y){
-    if( x > (DISPLAY_WIDTH/sizeof(FONT[0])) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
     x = x * sizeof(FONT[0]);
+    lcd_goto_xpix_y(x,y);
+}
+void lcd_goto_xpix_y(uint8_t x, uint8_t y){
+    if( x > (DISPLAY_WIDTH) || y > (DISPLAY_HEIGHT/8-1)) return;// out of display
     cursorPosition.x=x;
     cursorPosition.y=y;
 #if defined (SSD1306) || defined (SSD1309)
@@ -487,5 +490,22 @@ void lcd_display() {
         lcd_data(displayBuffer[i], sizeof(displayBuffer[i]));
     }
 #endif
+}
+void lcd_clear_buffer() {
+    for (uint8_t i = 0; i < DISPLAY_HEIGHT/8; i++){
+        memset(displayBuffer[i], 0x00, sizeof(displayBuffer[i]));
+    }
+}
+uint8_t lcd_check_buffer(uint8_t x, uint8_t y) {
+    if( x > DISPLAY_WIDTH-1 || y > (DISPLAY_HEIGHT-1)) return 0; // out of Display
+    return displayBuffer[(y / (DISPLAY_HEIGHT/8))][x] & (1 << (y % (DISPLAY_HEIGHT/8)));
+}
+void lcd_display_block(uint8_t x, uint8_t line, uint8_t width) {
+    if (line > (DISPLAY_HEIGHT/8-1) || x > DISPLAY_WIDTH - 1){return;}
+    if (x + width > DISPLAY_WIDTH) { // no -1 here, x alone is width 1
+        width = DISPLAY_WIDTH - x;
+    }
+    lcd_goto_xpix_y(x,line);
+    lcd_data(&displayBuffer[line][x], width);
 }
 #endif
