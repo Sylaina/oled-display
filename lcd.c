@@ -87,7 +87,12 @@ const uint8_t init_sequence [] PROGMEM = {    // Initialization Sequence
     0xD5,            // --set display clock divide ratio/oscillator frequency
     0xF0,            // --set divide ratio
     0xD9, 0x22,      // Set pre-charge period
-    0xDA, 0x12,      // Set com pins hardware configuration
+		     // Set com pins hardware configuration
+#if DISPLAY_HEIGHT==64
+    0xDA, 0x12,      
+#elif DISPLAY_HEIGHT==32
+    0xDA, 0x02,
+#endif
     0xDB,            // --set vcomh
     0x20,            // 0x20,0.77xVcc
     0x8D, 0x14,      // Set DC-DC enable
