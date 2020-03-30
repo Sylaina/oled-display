@@ -52,7 +52,7 @@ Speed (print 20 charaters (1 line) in normal size to display):
   <tr>
     <th>Mode</th>
     <th>Time</th>
-    <th>I2C-Speed RAM</th>
+    <th>I2C-Speed</th>
   </tr>
   <tr>
     <td>OLED (Text-Mode)</td>
