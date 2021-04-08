@@ -69,7 +69,7 @@ extern "C" {
     
     // using 7-bit-adress for lcd-library
     // if you use your own library for twi check I2C-adress-handle
-#define LCD_I2C_ADR         (0x7a >> 1)    // 7 bit slave-adress without r/w-bit
+#define LCD_I2C_ADR         (0x78 >> 1)    // 7 bit slave-adress without r/w-bit
     // r/w-bit are set/unset by library
     // e.g. 8 bit slave-adress:
     // 0x78 = adress 0x3C with cleared r/w-bit (write-mode)
@@ -130,13 +130,13 @@ extern "C" {
     // at GRAPHICMODE print character to buffer
     void lcd_charMode(uint8_t mode);            // set size of chars
 #if defined GRAPHICMODE
-    void lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color);
-    void lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
-    void lcd_drawRect(uint8_t px1, uint8_t py1, uint8_t px2, uint8_t py2, uint8_t color);
-    void lcd_fillRect(uint8_t px1, uint8_t py1, uint8_t px2, uint8_t py2, uint8_t color);
-    void lcd_drawCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
-    void lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
-    void lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t picture[], uint8_t width, uint8_t height, uint8_t color);
+    uint8_t lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color);
+    uint8_t lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
+    uint8_t lcd_drawRect(uint8_t px1, uint8_t py1, uint8_t px2, uint8_t py2, uint8_t color);
+    uint8_t lcd_fillRect(uint8_t px1, uint8_t py1, uint8_t px2, uint8_t py2, uint8_t color);
+    uint8_t lcd_drawCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
+    uint8_t lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
+    uint8_t lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t picture[], uint8_t width, uint8_t height, uint8_t color);
     void lcd_display(void);                // copy buffer to display RAM
     void lcd_clear_buffer(void); // clear display buffer
     uint8_t lcd_check_buffer(uint8_t x, uint8_t y); // read a pixel value from the display buffer
