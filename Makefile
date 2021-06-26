@@ -111,7 +111,7 @@ CFLAGS += -Wa,-adhlns=$(<:.c=.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 CFLAGS += -DF_CPU=$(F_CPU)
-CFLAGS += -finput-charset=utf-8 -fexec-charset=iso-8859-15
+#CFLAGS += -finput-charset=utf-8 -fexec-charset=iso-8859-15
 
 
 
