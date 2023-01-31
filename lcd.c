@@ -370,6 +370,35 @@ void lcd_putc(char c){
 void lcd_charMode(uint8_t mode){
     charMode = mode;
 }
+void lcd_flip(uint8_t flipping){
+	uint8_t command[2] = {0xC8, 0xA1};
+	switch(flipping){
+		case 0:
+			// normal mode default at init (needs to be reload data to display)
+			command[0] = 0xC8;
+			command[1] = 0xA1;
+			lcd_command(command, sizeof(command));
+			break;
+		case 1:
+			// flip horizontal && vertical (needs to be reload data to display)
+			command[0] = 0xC0;
+			command[1] = 0xA0;
+			lcd_command(command, sizeof(command));
+			break;
+		case 2:
+			// flip vertical (immediate without reload data to display)
+			command[0] = 0xC0;
+			lcd_command(command, sizeof(command));
+			break;
+		case 3:
+			// flip horizontal (needs to be reload data to display)
+			command[1] = 0xA0;
+			lcd_command(command, sizeof(command));
+		default:
+			// do nothing
+			break;
+	}
+}
 void lcd_puts(const char* s){
     while (*s) {
         lcd_putc(*s++);
