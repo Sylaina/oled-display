@@ -29,17 +29,17 @@ Memory:
   </tr>
   <tr>
     <td>FONT</td>
-    <td>644 Bytes</td>
+    <td>660 Bytes</td>
     <td>0 Bytes</td>
   </tr>
   <tr>
     <td>OLED (Text-Mode)</td>
-    <td>1395 Bytes</td>
-    <td>3 Bytes</td>
+    <td>1437 Bytes</td>
+    <td>2 Bytes</td>
   </tr>
   <tr>
     <td>OLED (Graphic-Mode)</td>
-    <td>2541 Bytes</td>
+    <td>2560 Bytes</td>
     <td>1027 Bytes</td>
   </tr>
  </table>
