@@ -112,23 +112,28 @@ extern "C" {
     void lcd_command(uint8_t cmd[], uint8_t size);    // transmit command to display
     void lcd_data(uint8_t data[], uint16_t size);    // transmit data to display
     void lcd_init(uint8_t dispAttr);
-    void lcd_home(void);                            // set cursor to 0,0
-    void lcd_invert(uint8_t invert);        // invert display
-    void lcd_sleep(uint8_t sleep);            // display goto sleep (power off)
+    void lcd_home(void);                        // set cursor to 0,0
+    void lcd_invert(uint8_t invert);        	// invert display
+    void lcd_sleep(uint8_t sleep);            	// display goto sleep (power off)
     void lcd_set_contrast(uint8_t contrast);    // set contrast for display
-    void lcd_puts(const char* s);            // print string, \n-terminated, from ram on screen (TEXTMODE)
-    // or buffer (GRAPHICMODE)
-    void lcd_puts_p(const char* progmem_s);        // print string from flash on screen (TEXTMODE)
-    // or buffer (GRAPHICMODE)
+    void lcd_puts(const char* s);            	// print string, \n-terminated, from ram on screen (TEXTMODE)
+    						// or buffer (GRAPHICMODE)
+    void lcd_puts_p(const char* progmem_s);	// print string from flash on screen (TEXTMODE)
+    						// or buffer (GRAPHICMODE)
     
-    void lcd_clrscr(void);                // clear screen (and buffer at GRFAICMODE)
-    void lcd_gotoxy(uint8_t x, uint8_t y);        // set curser at pos x, y. x means character,
+    void lcd_clrscr(void);                	// clear screen (and buffer at GRFAICMODE)
+    void lcd_gotoxy(uint8_t x, uint8_t y);      // set curser at pos x, y. x means character,
     // y means line (page, refer lcd manual)
     void lcd_goto_xpix_y(uint8_t x, uint8_t y); // set curser at pos x, y. x means pixel,
     // y means line (page, refer lcd manual)
-    void lcd_putc(char c);                // print character on screen at TEXTMODE
+    void lcd_putc(char c);                	// print character on screen at TEXTMODE
     // at GRAPHICMODE print character to buffer
     void lcd_charMode(uint8_t mode);            // set size of chars
+    void lcd_flip(uint8_t flipping);		// flip display, 
+						// flipping == 0: no flip (normal mode) 
+    						// == 1: flip horizontal & vertical
+    						// == 2: flip(mirrored) vertical
+    						// == 3: flip(mirrored) horizontal
 #if defined GRAPHICMODE
     uint8_t lcd_drawPixel(uint8_t x, uint8_t y, uint8_t color);
     uint8_t lcd_drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
@@ -137,8 +142,8 @@ extern "C" {
     uint8_t lcd_drawCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
     uint8_t lcd_fillCircle(uint8_t center_x, uint8_t center_y, uint8_t radius, uint8_t color);
     uint8_t lcd_drawBitmap(uint8_t x, uint8_t y, const uint8_t picture[], uint8_t width, uint8_t height, uint8_t color);
-    void lcd_display(void);                // copy buffer to display RAM
-    void lcd_clear_buffer(void); // clear display buffer
+    void lcd_display(void);                	// copy buffer to display RAM
+    void lcd_clear_buffer(void); 		// clear display buffer
     uint8_t lcd_check_buffer(uint8_t x, uint8_t y); // read a pixel value from the display buffer
     void lcd_display_block(uint8_t x, uint8_t line, uint8_t width); // display (part of) a display line
 #endif
